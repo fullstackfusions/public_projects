@@ -1,0 +1,11 @@
+{
+  "name": "public-projects",
+  "private": true,
+  "workspaces": [
+    "projects/*/src"
+  ],
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  }
+}
