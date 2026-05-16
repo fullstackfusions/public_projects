@@ -1,0 +1,15 @@
+name: floci_demo
+
+services:
+  floci:
+    image: floci/floci:latest
+    container_name: floci_demo
+    user: root
+    ports:
+      - "4566:4566"
+    environment:
+      FLOCI_DEFAULT_REGION: us-east-1
+      FLOCI_STORAGE_MODE: hybrid
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/app/data
