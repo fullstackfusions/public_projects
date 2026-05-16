@@ -79,6 +79,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | **1** | [`real-time-fraud-detector`](./projects/1.real-time-fraud-detector/) | Fintech / Banking | API Gateway, SQS, Lambda, ElastiCache (Redis) | High-throughput velocity and fraud checking for card transactions. |
 | **2** | [`automated-phr-pipeline`](./projects/2.automated-phr-pipeline/) | Healthcare IT | S3, AWS Lambda, RDS PostgreSQL, Floci | HIPAA-compliant health record ingestion and schema validation. |
 | **3** | [`open-banking-analytics`](./projects/3.open-banking-analytics/) | Fintech / Analytics | S3, Glue Catalog, Athena (via DuckDB) | Analytical engine for querying mock open-banking data lakes entirely offline. |
+| **4** | [`floci_demo`](./projects/4.floci_demo/) | Cloud Emulation / DevTools | Floci, S3, SQS, DynamoDB, Streamlit | Document-processing pipeline demo running a full S3 + SQS + DynamoDB workflow locally via Floci. |
 
 
 ## ⚠️ Disclaimer
