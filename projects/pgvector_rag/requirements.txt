@@ -1,0 +1,8 @@
+langchain
+langchain-core
+langchain-openai
+langchain-community
+langchain-postgres
+psycopg[binary]
+openai
+tiktoken

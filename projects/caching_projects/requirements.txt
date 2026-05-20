@@ -1,0 +1,4 @@
+pymongo
+psycopg2-binary
+redis
+pydantic[email]

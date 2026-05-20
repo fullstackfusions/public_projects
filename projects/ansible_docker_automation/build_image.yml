@@ -1,0 +1,11 @@
+- name: Build Docker Image
+  hosts: localhost
+  tasks:
+    - name: Build Docker Image
+      community.docker.docker_image:
+        name: go-app
+        build:
+          path: # <path to go application files, docker file>
+        source: build
+      environment:
+        DOCKER_HOST: "unix:///var/run/docker.sock"

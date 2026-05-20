@@ -1,0 +1,10 @@
+{
+  "name": "docker_entrypoint",
+  "version": "1.0.0",
+  "description": "Minimal Node container demonstrating the ENTRYPOINT + CMD pattern.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "license": "MIT"
+}
