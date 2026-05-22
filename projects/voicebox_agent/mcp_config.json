@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "voicebox": {
+      "url": "http://127.0.0.1:17493/mcp",
+      "headers": {
+        "X-Voicebox-Client-Id": "cursor"
+      }
+    }
+  }
+}
