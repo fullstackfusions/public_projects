@@ -118,6 +118,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`rag_from_scratch_project_1`](./projects/rag_from_scratch_project_1/) | AI / LLM | Python, Jupyter | Notebook series building a RAG system from scratch across 18 steps. |
 | [`streamlit_kafka`](./projects/streamlit_kafka/) | Backend / Streaming | Streamlit, Kafka, Python | Streamlit UI for producing custom-structured dummy metric data into a Kafka topic. |
 | [`podman_docker_kubernetes`](./projects/podman_docker_kubernetes/) | DevOps / Containers | Podman, Docker, Kubernetes | Podman-based container workflows and Kubernetes deployment patterns. |
+| [`voicebox_agent`](./projects/voicebox_agent/) | AI / Voice | Python, Voicebox, MCP | Local voice notifications for CLI pipelines and AI agents using the Voicebox REST API. |
 
 
 ## ⚠️ Disclaimer
