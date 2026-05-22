@@ -1,0 +1,6 @@
+langchain
+langchain-openai
+openai
+faiss-cpu
+tiktoken
+python-dotenv
