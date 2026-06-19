@@ -1,0 +1,601 @@
+services:
+  # =============================================================================
+  # INFRASTRUCTURE SERVICES
+  # =============================================================================
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6100:6379"
+
+  # PostgreSQL — used by scheduler-backend (Events + Reminders)
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=scheduler
+      - POSTGRES_PASSWORD=scheduler
+      - POSTGRES_DB=scheduler_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5100:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduler -d scheduler_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # MongoDB — used by tax-backend (Corporations, Filings, Nil T2 reports)
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=tax_db
+    volumes:
+      - mongo_data:/data/db
+      - ./infra/mongo/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "27100:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - "2100:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "19100:19092"  # Kafka (external)
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:19092
+      - KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 25s
+
+  # =============================================================================
+  # NOTIFICATION INFRASTRUCTURE
+  # =============================================================================
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"   # SMTP (adapters point here)
+      - "8025:8025"   # Web UI → http://localhost:8025
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8025 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: ntfy
+    command: serve
+    ports:
+      - "8088:80"     # 8080 is taken by todo-go
+    volumes:
+      - ntfy_cache:/var/cache/ntfy
+    environment:
+      - NTFY_BASE_URL=http://ntfy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  waha:
+    image: devlikeapro/waha:latest
+    platform: linux/amd64   # no arm64 image published; Rosetta 2 handles emulation on Apple Silicon
+    container_name: waha
+    ports:
+      - "3000:3000"   # host 3000 free (grafana maps 3030:3000)
+    environment:
+      - WAHA_API_KEY=localdev-waha-api-key        # fixed — adapter sends X-Api-Key header
+      - WAHA_DASHBOARD_USERNAME=admin
+      - WAHA_DASHBOARD_PASSWORD=localdev-admin    # fixed — prevents random regen on restart
+      - WHATSAPP_SWAGGER_USERNAME=admin
+      - WHATSAPP_SWAGGER_PASSWORD=localdev-admin  # Swagger UI basic auth
+      - WHATSAPP_DEFAULT_ENGINE=NOWEB             # NOWEB: direct protocol, no Chromium, more stable than WEBJS
+    volumes:
+      - waha_sessions:/app/.sessions
+
+  # =============================================================================
+  # BACKEND SERVICES
+  # =============================================================================
+
+  scheduler-backend:
+    build:
+      context: .
+      dockerfile: backends/scheduler-py/Dockerfile
+    container_name: scheduler-backend
+    environment:
+      - SERVICE_NAME=scheduler-backend
+      - ENVIRONMENT=development
+      - SCHEDULER_DATABASE_URL=postgresql+asyncpg://scheduler:scheduler@postgres:5432/scheduler_db
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
+    volumes:
+      - ./backends/scheduler-py/app:/app/app
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '7001:8000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  tax-backend:
+    build:
+      context: .
+      dockerfile: backends/tax-py/Dockerfile
+    container_name: tax-backend
+    environment:
+      - SERVICE_NAME=tax-backend
+      - ENVIRONMENT=development
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB=tax_db
+      - SCHEDULER_API_URL=http://scheduler-backend:8000
+      - NOTIFICATION_API_URL=http://notification-backend:8008
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8007", "--reload"]
+    volumes:
+      - ./backends/tax-py/app:/app/app
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8007:8007'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8007/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  notification-backend:
+    build:
+      context: .
+      dockerfile: backends/notification-py/Dockerfile
+    container_name: notification-backend
+    environment:
+      - SERVICE_NAME=notification-backend
+      - ENVIRONMENT=development
+      - NOTIFICATION_DATABASE_URL=postgresql+asyncpg://scheduler:scheduler@postgres:5432/notification_db
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_FROM=noreply@taxapp.local
+      - NTFY_BASE_URL=http://ntfy
+      - WAHA_BASE_URL=http://waha:3000
+      - WAHA_SESSION=default
+      - WAHA_API_KEY=localdev-waha-api-key
+      - REDIS_URL=redis://redis:6379/2
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8008 --reload"]
+    volumes:
+      - ./backends/notification-py/app:/app/app
+      - ./backends/notification-py/migrations:/app/migrations
+      - ./backends/notification-py/templates:/app/templates
+      - ./shared-py:/shared-py:ro
+    ports:
+      - "8008:8008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailpit:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8008/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  todo-backend:
+    build:
+      context: .
+      dockerfile: backends/todo-go/Dockerfile
+    container_name: todo-backend
+    environment:
+      - SERVICE_NAME=todo-backend
+      - ENVIRONMENT=development
+      - PORT=8080
+      - DATABASE_URL=postgres://todo:todo@postgres:5432/todo_db?sslmode=disable
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=info
+    ports:
+      - '8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  finance-backend:
+    build:
+      context: .
+      dockerfile: backends/finance-py/Dockerfile
+    container_name: finance-backend
+    environment:
+      - SERVICE_NAME=finance-backend
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8001:8001'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  validator-backend:
+    build:
+      context: .
+      dockerfile: backends/validator-py/Dockerfile
+    container_name: validator-backend
+    environment:
+      - SERVICE_NAME=validator-backend
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8002:8002'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8002/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  chatbot-backend:
+    build:
+      context: .
+      dockerfile: backends/chatbot-py/Dockerfile
+    container_name: chatbot-backend
+    environment:
+      - SERVICE_NAME=chatbot-backend
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8003:8003'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  chatbot-go-backend:
+    build:
+      context: .
+      dockerfile: backends/chatbot-go/Dockerfile
+    container_name: chatbot-go-backend
+    environment:
+      - SERVICE_NAME=chatbot-go
+      - ENVIRONMENT=development
+      - PORT=8004
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=info
+    volumes:
+      - ./shared-go:/shared-go:ro
+    ports:
+      - '8004:8004'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8004/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  auth-backend:
+    build:
+      context: .
+      dockerfile: backends/auth-py/Dockerfile
+    container_name: auth-backend
+    environment:
+      - SERVICE_NAME=auth-backend
+      - ENVIRONMENT=development
+      - AUTH_DATABASE_URL=postgresql+asyncpg://auth:auth@postgres:5432/users_db
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - AUTH_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - REDIS_URL=redis://redis:6379/1
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-http://localhost:8005/auth/google/callback}
+      - FRONTEND_REDIRECT_URI=${FRONTEND_REDIRECT_URI:-http://localhost:5173/auth/callback}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - LOG_LEVEL=INFO
+      - SEED_USERS=admin:admin123:admin:admin@example.com,demo:demo123:user:demo@example.com,user:user123:user:user@example.com
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8005:8005'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8005/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  marketplace-api:
+    build:
+      context: .
+      dockerfile: backends/marketplace-py/Dockerfile
+    container_name: marketplace-api
+    environment:
+      - SERVICE_NAME=marketplace-backend
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - LOG_LEVEL=INFO
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8006"]
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - '8006:8006'
+    depends_on:
+      kafka:
+        condition: service_healthy
+
+  payment-consumer:
+    build:
+      context: ./backends/marketplace-py/consumer
+    container_name: payment-consumer
+    environment:
+      - KAFKA_BOOTSTRAP=kafka:9092
+      - KAFKA_GROUP_ID=payment-service-v1
+      - DB_PATH=/data/payments.db
+    volumes:
+      - ./backends/marketplace-py/consumer/app:/app/app
+      - payment_db:/data
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # METRICS STACK  (Grafana + Prometheus — used by agentic-chat GrafanaAgent)
+  # =============================================================================
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./backends/agentic-chat-py/config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    ports:
+      - "9090:9090"
+    depends_on:
+      - node-exporter
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - ./backends/agentic-chat-py/config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3110:3000"
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  # Grafana MCP Server — SSE transport at port 8083 (GrafanaAgent endpoint)
+  grafana-mcp:
+    image: grafana/mcp-grafana:latest
+    container_name: grafana-mcp
+    environment:
+      - GRAFANA_URL=http://grafana:3000
+      - GRAFANA_AUTH=admin:admin
+    command: ["-transport", "sse", "-address", "0.0.0.0:8083"]
+    ports:
+      - "8119:8083"
+    depends_on:
+      grafana:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # ELASTICSEARCH STACK  (used by agentic-chat FlowIqAgent)
+  # =============================================================================
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=agentic-cluster
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health | grep -qv '\"status\":\"red\"'"]
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    restart: unless-stopped
+
+  # =============================================================================
+  # AGENTIC CHAT BACKEND
+  # =============================================================================
+
+  agentic-chat:
+    build:
+      context: .
+      dockerfile: backends/agentic-chat-py/Dockerfile
+    container_name: agentic-chat
+    env_file:
+      - ./.env
+    environment:
+      - SERVICE_NAME=agentic-chat-backend
+      - AUTH_SECRET_KEY=${AUTH_SECRET_KEY:-dev-secret-key-change-in-production-abc123xyz}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+      - REDIS_URL=redis://redis:6379
+      - MCP_GRAFANA_URL=http://grafana-mcp:8083/sse
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./shared-py:/shared-py:ro
+    ports:
+      - "8010:8010"
+    depends_on:
+      redis:
+        condition: service_started
+      grafana-mcp:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # =============================================================================
+  # FRONTEND SERVICES
+  # =============================================================================
+
+  apps-frontend:
+    build:
+      context: ./frontends
+    container_name: apps-frontend
+    environment:
+      - VITE_SCHEDULER_API_BASE=/scheduler-api
+      - VITE_TODO_API_BASE=/todo-api
+      - VITE_FINANCE_API_BASE=/finance-api
+      - VITE_TAX_API_BASE=/tax-api
+      - VITE_NOTIFICATION_API_BASE=/notification-api
+      - VITE_VALIDATOR_API_URL=http://localhost:8002
+      - VITE_CHAT_API_URL=http://localhost:8003
+      - VITE_CHAT_WS_URL=ws://localhost:8003
+      - VITE_CHAT_GO_API_URL=http://localhost:8004
+      - VITE_CHAT_GO_WS_URL=ws://localhost:8004
+      - VITE_AUTH_API_URL=http://localhost:8005
+      - VITE_MARKETPLACE_API_URL=http://localhost:8006
+      - VITE_AGENTIC_CHAT_API_URL=http://localhost:8010
+      - SCHEDULER_API_PROXY_TARGET=http://scheduler-backend:8000
+      - TODO_API_PROXY_TARGET=http://todo-backend:8080
+      - FINANCE_API_PROXY_TARGET=http://finance-backend:8001
+      - TAX_API_PROXY_TARGET=http://tax-backend:8007
+      - NOTIFICATION_API_PROXY_TARGET=http://notification-backend:8008
+      - AUTH_API_PROXY_TARGET=http://auth-backend:8005
+    ports:
+      - '5173:5173'
+    depends_on:
+      - scheduler-backend
+      - tax-backend
+      - todo-backend
+      - finance-backend
+      - validator-backend
+      - chatbot-backend
+      - chatbot-go-backend
+      - auth-backend
+      - marketplace-api
+      - agentic-chat
+    volumes:
+      - ./frontends/customer-portal:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  postgres_data:   # scheduler-backend, auth-backend, todo-backend, notification-backend (PostgreSQL)
+  mongo_data:      # tax-backend (MongoDB)
+  payment_db:
+  grafana_data:
+  prometheus_data:
+  es_data:
+  ntfy_cache:      # ntfy push notification server cache
+  waha_sessions:   # WAHA WhatsApp session data (QR scan persisted here)

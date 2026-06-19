@@ -1,0 +1,213 @@
+asyncapi: 3.0.0
+
+info:
+  title: Marketplace Event-Driven Architecture
+  version: 1.0.0
+  description: |
+    AsyncAPI specification for marketplace event-driven architecture.
+
+    This specification defines the event contracts for:
+    - Order creation events
+    - Payment processing events
+
+    **Key Concepts**:
+    - **Routing**: Events routed via Kafka topic names (not flags in payload)
+    - **Consumer Groups**: Services scale independently using consumer groups
+    - **Data Contracts**: Each service owns its data, integration via events
+    - **Schema Evolution**: Version events to support backward compatibility
+  contact:
+    name: Marketplace Team
+  license:
+    name: MIT
+
+servers:
+  development:
+    host: localhost:19092
+    protocol: kafka
+    description: Local development Kafka (Redpanda)
+  production:
+    host: kafka.production.example.com:9092
+    protocol: kafka
+    description: Production Kafka cluster
+
+channels:
+  orders.created:
+    address: orders.created
+    messages:
+      OrderCreatedEventV1:
+        $ref: "#/components/messages/OrderCreatedEventV1"
+    description: |
+      Channel for order creation events.
+
+      **Producers**: marketplace-api
+      **Consumers**: payment-service, notification-service, analytics-service
+
+      **Routing**: Messages routed by topic name (orders.created)
+      **Scaling**: Each consumer service uses its own consumer group
+
+operations:
+  publishOrderCreated:
+    action: send
+    channel:
+      $ref: "#/channels/orders.created"
+    summary: Publish order created event
+    description: |
+      Published by marketplace-api when a new order is created.
+
+      **Producer**: marketplace-api
+      **Data Ownership**: marketplace-api owns order data
+    messages:
+      - $ref: "#/channels/orders.created/messages/OrderCreatedEventV1"
+
+  consumeOrderCreated:
+    action: receive
+    channel:
+      $ref: "#/channels/orders.created"
+    summary: Consume order created event
+    description: |
+      Consumed by payment-service to create payments.
+
+      **Consumer**: payment-service
+      **Consumer Group**: payment-service-v1
+      **Data Ownership**: payment-service owns payment data
+      **Scaling**: Multiple instances share load within consumer group
+    messages:
+      - $ref: "#/channels/orders.created/messages/OrderCreatedEventV1"
+
+components:
+  messages:
+    OrderCreatedEventV1:
+      name: OrderCreatedEventV1
+      title: Order Created Event v1
+      summary: Event published when an order is successfully created
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/OrderCreatedEventV1Payload"
+      examples:
+        - name: Basic order
+          summary: A basic order creation event
+          payload:
+            order:
+              order_id: ord_user_1_1999
+              user_id: user_1
+              amount_cents: 1999
+
+  schemas:
+    OrderCreatedEventV1Payload:
+      type: object
+      description: Payload for OrderCreatedEvent v1
+      required:
+        - order
+      properties:
+        order:
+          $ref: "#/components/schemas/OrderCreatedOrder"
+      additionalProperties: false
+
+    OrderCreatedOrder:
+      type: object
+      description: Order details within OrderCreatedEvent
+      required:
+        - order_id
+        - user_id
+        - amount_cents
+      properties:
+        order_id:
+          type: string
+          description: Unique order identifier
+          example: ord_user_1_1999
+        user_id:
+          type: string
+          description: User who created the order
+          example: user_1
+        amount_cents:
+          type: integer
+          description: Order amount in cents (to avoid floating point issues)
+          minimum: 1
+          example: 1999
+      additionalProperties: false
+
+  # Consumer Groups define scaling units
+  # Each service has its own consumer group for isolation and independent scaling
+  consumerGroups:
+    payment-service:
+      groupId: payment-service-v1
+      description: |
+        Consumer group for payment service.
+
+        **Purpose**: Create payments for orders
+        **Scaling**: Horizontal - run multiple instances with same group_id
+        **Data Ownership**: Owns payment data (payments.db)
+        **Offset Management**: Independent offset tracking per group
+
+    notification-service:
+      groupId: notification-service-v1
+      description: |
+        Consumer group for notification service (example).
+
+        **Purpose**: Send order confirmation emails/SMS
+        **Scaling**: Horizontal - run multiple instances with same group_id
+        **Data Ownership**: Owns notification logs
+
+    analytics-service:
+      groupId: analytics-service-v1
+      description: |
+        Consumer group for analytics service (example).
+
+        **Purpose**: Track order metrics and trends
+        **Scaling**: Horizontal - run multiple instances with same group_id
+        **Data Ownership**: Owns analytics aggregations
+
+# Architecture Patterns
+x-architecture:
+  patterns:
+    - Contract-First Design
+    - Event-Driven Architecture (EDA)
+    - Data Ownership / Data Contracts
+    - Bounded Contexts (DDD)
+    - Consumer Groups for Horizontal Scaling
+
+  data-contracts:
+    orders:
+      owner: marketplace-api
+      description: Order creation and order state
+      integration: Events via orders.created topic
+
+    payments:
+      owner: payment-service
+      description: Payment creation and payment state
+      integration: Consumes orders.created events
+
+  routing-strategy:
+    type: topic-based
+    description: |
+      Events are routed via Kafka topic names (e.g., orders.created).
+      No routing flags in payload.
+
+      Benefits:
+      - Clear event semantics
+      - Topic-level access control
+      - Topic-level retention policies
+      - Consumer can subscribe to specific topics only
+
+  scaling-strategy:
+    type: consumer-groups
+    description: |
+      Each service uses a unique consumer group ID.
+      Multiple instances of same service share same group_id.
+
+      Benefits:
+      - Horizontal scaling within service
+      - Load distribution across instances
+      - Fault tolerance (if one instance dies, others continue)
+      - Isolation between services (different groups)
+
+  schema-evolution:
+    strategy: backward-compatible
+    description: |
+      Version events (e.g., OrderCreatedEventV1, OrderCreatedEventV2).
+
+      Rules:
+      - Never remove required fields
+      - New fields must be optional
+      - Use semantic versioning for events
+      - Deprecate old versions gracefully

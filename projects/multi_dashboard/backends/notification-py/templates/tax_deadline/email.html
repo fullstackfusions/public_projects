@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tax Filing Reminder — {{ corp_name }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+    .card { background: #fff; border-radius: 8px; max-width: 560px; margin: 0 auto; padding: 32px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .header { border-bottom: 2px solid #1976d2; padding-bottom: 16px; margin-bottom: 24px; }
+    h1 { color: #1976d2; font-size: 22px; margin: 0; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: bold; }
+    .urgent   { background: #ffebee; color: #c62828; }
+    .warning  { background: #fff8e1; color: #f57f17; }
+    .normal   { background: #e8f5e9; color: #2e7d32; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    td { padding: 10px 0; border-bottom: 1px solid #eee; }
+    td:first-child { color: #555; font-size: 13px; width: 160px; }
+    td:last-child { font-weight: 600; }
+    .cta { display: block; margin-top: 24px; text-align: center; background: #1976d2; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-size: 15px; }
+    .footer { margin-top: 32px; font-size: 12px; color: #aaa; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>📅 Tax Filing Reminder</h1>
+  </div>
+
+  <p>Hello,</p>
+  <p>This is a reminder that a tax filing deadline is approaching for <strong>{{ corp_name }}</strong>.</p>
+
+  <table>
+    <tr>
+      <td>Corporation</td>
+      <td>{{ corp_name }}</td>
+    </tr>
+    <tr>
+      <td>Filing Type</td>
+      <td>{{ filing_type | replace("_", " ") | title }}</td>
+    </tr>
+    <tr>
+      <td>Period</td>
+      <td>{{ period_label }}</td>
+    </tr>
+    <tr>
+      <td>Due Date</td>
+      <td>{{ due_date }}</td>
+    </tr>
+    <tr>
+      <td>Days Remaining</td>
+      <td>
+        <span class="badge {% if days_before <= 14 %}urgent{% elif days_before <= 30 %}warning{% else %}normal{% endif %}">
+          {{ days_before }} days
+        </span>
+      </td>
+    </tr>
+  </table>
+
+  <p>Please log in to your portal to review the filing schedule and mark filings as complete.</p>
+  <a href="http://localhost:5173/tax/dashboard" class="cta">Open Tax Dashboard →</a>
+
+  <div class="footer">
+    You received this email because you have email notifications enabled.<br>
+    To unsubscribe, update your preferences at <a href="http://localhost:5173/preferences">localhost:5173/preferences</a>.
+  </div>
+</div>
+</body>
+</html>

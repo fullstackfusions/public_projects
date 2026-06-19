@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# Install the official Elastic MCP server globally so the binary is on PATH
+RUN npm install -g @elastic/mcp-server-elasticsearch
+
+# Patch the installed dist/index.js to remove the hardcoded EDOT and telemetry
+# imports. These cause a crash-loop when no APM/OTEL collector endpoint exists,
+# because the OTEL gRPC exporter fails to flush on shutdown and the process exits.
+RUN sed -i \
+    -e "s|import '@elastic/opentelemetry-node';||g" \
+    -e "s|import \"@elastic/opentelemetry-node\";||g" \
+    -e "s|import './telemetry.js';||g" \
+    -e "s|import \"./telemetry.js\";||g" \
+    /usr/local/lib/node_modules/@elastic/mcp-server-elasticsearch/dist/index.js
+
+EXPOSE 8084
+
+# Run from within the package directory so Node.js resolves package.json
+# (needed for ESM "type": "module" detection).
+WORKDIR /usr/local/lib/node_modules/@elastic/mcp-server-elasticsearch
+
+CMD ["node", "dist/index.js", "--transport=sse", "--port=8084"]
