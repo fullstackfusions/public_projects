@@ -1,0 +1,6 @@
+📅 *Tax Reminder — {{ corp_name }}*
+
+Filing: {{ period_label }}
+Due in: *{{ days_before }} days* ({{ due_date }})
+
+Please log in to your portal to review your filing schedule.

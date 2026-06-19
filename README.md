@@ -109,6 +109,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`mongodb_caching`](./projects/mongodb_caching/) | Backend / Databases | MongoDB, Python | MongoDB-backed response cache keyed by SHA-256 hash with TTL expiry. |
 | [`mongodb_distributed_lock`](./projects/mongodb_distributed_lock/) | Backend / Databases | MongoDB, Python | Distributed lock implementation using MongoDB with TTL-based auto-release. |
 | [`mongodb_to_avoid_duplicate`](./projects/mongodb_to_avoid_duplicate/) | Backend / Databases | MongoDB, Python | CacheManager combining response caching, duplicate-request detection, and distributed lock. |
+| [`multi_dashboard`](./projects/multi_dashboard/) | Full-stack / Microservices | FastAPI, Go, React, PostgreSQL, MongoDB, Kafka, Redis, LangGraph, Docker | Monorepo of microservices teaching REST, SSE, WebSockets, Kafka, JWT/OAuth, NoSQL, and AI agents wired to a single React frontend. |
 | [`parallel_chain_function_calling`](./projects/parallel_chain_function_calling/) | AI / LLM | LangChain, FastAPI, OpenAI | Parallel self-correcting LangChain tool-calling chain with retry/fallback, served via FastAPI. |
 | [`pdf_rag_chatbot`](./projects/pdf_rag_chatbot/) | AI / LLM | RAG, Streamlit, Python | RAG chatbot over PDFs with a Streamlit UI and database-backed vector store. |
 | [`pgvector_rag`](./projects/pgvector_rag/) | AI / LLM | PostgreSQL, pgvector, LangChain, OpenAI | RAG with pgvector: embed documents and run similarity search against Postgres. |
