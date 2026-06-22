@@ -79,6 +79,8 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`real_time_fraud_detector`](./projects/real_time_fraud_detector/) | Fintech / Banking | API Gateway, SQS, Lambda, ElastiCache (Redis) | High-throughput velocity and fraud checking for card transactions. |
 | [`automated_phr_pipeline`](./projects/automated_phr_pipeline/) | Healthcare IT | S3, AWS Lambda, RDS PostgreSQL, Floci | HIPAA-compliant health record ingestion and schema validation. |
 | [`open_banking_analytics`](./projects/open_banking_analytics/) | Fintech / Analytics | S3, Glue Catalog, Athena (via DuckDB) | Analytical engine for querying mock open-banking data lakes entirely offline. |
+| [`open_banking_analytics_engine`](./projects/open_banking_analytics_engine/) | Fintech / Analytics | S3, Glue Catalog, Athena (via DuckDB) | Case study: offline open-banking analytics engine computing spending trends and balances via DuckDB-powered Athena. |
+| [`secure_patient_portal_audit_logger`](./projects/secure_patient_portal_audit_logger/) | Healthcare IT | Cognito, API Gateway, DynamoDB Streams, Lambda, S3 | Case study: HIPAA-conscious patient-portal auth with an immutable, write-once audit trail. |
 | [`floci_demo`](./projects/floci_demo/) | Cloud Emulation / DevTools | Floci, S3, SQS, DynamoDB, Streamlit | Document-processing pipeline demo running a full S3 + SQS + DynamoDB workflow locally via Floci. |
 | [`agent_prompting`](./projects/agent_prompting/) | AI / LLM | Python | Agent prompting patterns and prompt-engineering utilities. |
 | [`ansible_docker_automation`](./projects/ansible_docker_automation/) | DevOps / Automation | Ansible, Docker | Ansible playbooks to build Docker images, deploy containers, and run smoke tests. |
