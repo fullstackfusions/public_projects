@@ -18,7 +18,15 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_ollama import ChatOllama
 from langgraph.graph import StateGraph, END
 
-from projects.local_first_compression_layer.config import MODEL, OLLAMA_BASE_URL, SYSTEM_PROMPT, USER_QUERY
+from projects.local_first_compression_layer.config import (
+    MODEL,
+    OLLAMA_BASE_URL,
+    SYSTEM_PROMPT,
+    USER_QUERY,
+    PROSE_RATIO,
+    KOMPRESS_DISABLED,
+    KOMPRESS_MODEL,
+)
 from projects.local_first_compression_layer.data.sample_rag_chunks import build_rag_messages
 
 # tiktoken cl100k_base is a reasonable approximation across Qwen/DeepSeek tokenizers
@@ -68,6 +76,9 @@ class AgentState(TypedDict):
     compression_ratio: float
     transforms_applied: list[str]
     compression_applied: bool
+    # compression knobs — set in run()'s initial state, read by compress_node
+    kompress_model: str          # "disabled" (rule-based only) or an HF model id
+    target_ratio: float | None   # prose compression target; only used when Kompress is on
     inference_time_s: float
     prompt_tokens: int       # from Ollama response usage
     completion_tokens: int
@@ -101,16 +112,26 @@ def compress_node(state: AgentState) -> AgentState:
     Apply headroom compress() to reduce message size before sending.
     Uses CompressResult fields directly — more accurate than tiktoken re-estimation.
     Falls back to raw messages if headroom fails.
+
+    Two configurations, selected via state["kompress_model"]:
+      - "disabled" → rule-based only: SmartCrusher (JSON) + CodeCompressor (AST),
+        fully deterministic. target_ratio is ignored.
+      - an HF model id → also runs Kompress (extractive ML prose compressor),
+        the opt-in escalation. target_ratio drives how aggressively prose is cut.
     """
     try:
         from headroom import compress as hd_compress
-        result = hd_compress(
-            state["raw_messages"],
-            model="gpt-4o",
+        kompress_model = state.get("kompress_model", KOMPRESS_DISABLED)
+        kwargs = dict(
             compress_user_messages=True,  # RAG tool results live in user messages
             protect_recent=0,             # compress all turns, not just history
-            kompress_model="disabled",    # no HF/ONNX model — only SmartCrusher (JSON) + CodeCompressor (AST)
+            kompress_model=kompress_model,
         )
+        # target_ratio only bites when Kompress is enabled; without it the prose
+        # blocks are left to the savings gate and Kompress effectively never fires.
+        if state.get("target_ratio") is not None:
+            kwargs["target_ratio"] = state["target_ratio"]
+        result = hd_compress(state["raw_messages"], model="gpt-4o", **kwargs)
         return {
             **state,
             "send_messages": result.messages,
@@ -219,7 +240,12 @@ baseline_graph   = _build_graph(with_compression=False)
 compressed_graph = _build_graph(with_compression=True)
 
 
-def run(with_compression: bool = False) -> AgentState:
+def run(with_compression: bool = False, kompress: bool = False) -> AgentState:
+    """
+    with_compression=False           → baseline (no compress node)
+    with_compression=True            → rule-based compressors only (deterministic)
+    with_compression=True, kompress  → rule-based + Kompress ML prose compressor
+    """
     graph = compressed_graph if with_compression else baseline_graph
     initial: AgentState = {
         "raw_messages": [],
@@ -231,6 +257,8 @@ def run(with_compression: bool = False) -> AgentState:
         "compression_ratio": 1.0,
         "transforms_applied": [],
         "compression_applied": False,
+        "kompress_model": KOMPRESS_MODEL if kompress else KOMPRESS_DISABLED,
+        "target_ratio": PROSE_RATIO if kompress else None,
         "inference_time_s": 0.0,
         "prompt_tokens": 0,
         "completion_tokens": 0,
