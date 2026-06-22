@@ -2,8 +2,6 @@
 
 LangGraph + LangChain + local Ollama models (Qwen / DeepSeek / GLM) with Headroom as a compression node in the pipeline.
 
-**Research context:** [research-headroom.md](./research-headroom.md) | [perspective.md](./perspective.md)
-
 ---
 
 ## Architecture
