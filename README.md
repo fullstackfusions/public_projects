@@ -120,6 +120,9 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`streamlit_kafka`](./projects/streamlit_kafka/) | Backend / Streaming | Streamlit, Kafka, Python | Streamlit UI for producing custom-structured dummy metric data into a Kafka topic. |
 | [`podman_docker_kubernetes`](./projects/podman_docker_kubernetes/) | DevOps / Containers | Podman, Docker, Kubernetes | Podman-based container workflows and Kubernetes deployment patterns. |
 | [`voicebox_agent`](./projects/voicebox_agent/) | AI / Voice | Python, Voicebox, MCP | Local voice notifications for CLI pipelines and AI agents using the Voicebox REST API. |
+| [`agent_harness`](./projects/agent_harness/) | AI / LLM | Python, LangGraph, LangChain, Ollama | Three experiments showing how harness infrastructure (planning, memory, verification, sandboxing, sub-agents) determines agent reliability — measured rung-by-rung via a controlled benchmark. |
+| [`local_first_compression_layer`](./projects/local_first_compression_layer/) | AI / LLM | LangGraph, LangChain, Ollama, Headroom | RAG pipeline with Headroom as a compression node; compares a baseline graph against a compressed graph using local Ollama models (Qwen / DeepSeek / GLM). |
+| [`rust_token_killer`](./projects/rust_token_killer/) | AI / LLM | LangGraph, Python, Ollama | LangGraph demo that benchmarks token savings by compressing shell commands via RTK before sending to a local Qwen2.5 agent — raw vs. compressed mode comparison. |
 
 
 ## ⚠️ Disclaimer

@@ -1,0 +1,30 @@
+[project]
+name = "harness-ladder"
+version = "0.1.0"
+description = "Harness Ladder Experiment — measure how agent harness components affect reliability"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.0",
+    "langchain>=0.3.0",
+    "langchain-anthropic>=0.3.0",
+    "langchain-ollama>=0.2.0",
+    "langchain-core>=0.3.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.0.0",
+    "pytest>=8.0.0",
+]
+
+[project.optional-dependencies]
+plot = ["pandas>=2.0.0", "matplotlib>=3.8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tools", "harness", "eval"]
+
+[tool.pytest.ini_options]
+# Task tests are run per-task-dir by the eval runner (cwd=task_dir subprocess).
+# Do not collect them from the project root — 'solution' is not on root sys.path.
+norecursedirs = ["tasks", ".git", "__pycache__"]

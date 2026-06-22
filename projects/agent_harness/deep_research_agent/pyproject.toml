@@ -1,0 +1,22 @@
+[project]
+name = "deep-research-agent"
+version = "0.1.0"
+description = "Real-world deep research agent built on LangChain's deepagents — planning, subagent delegation, virtual filesystem, web search."
+requires-python = ">=3.11"
+dependencies = [
+    "deepagents>=0.6.11",       # bundles langchain, langchain-core, langchain-anthropic
+    "langchain-ollama>=1.1.0",  # default runtime — local models (gemma3:12b, etc.)
+    "ddgs>=9.14.4",             # web search tool (DuckDuckGo, no API key)
+    "python-dotenv>=1.0.0",
+    "rich>=15.0.0",
+]
+
+# Anthropic (langchain-anthropic) is already bundled by deepagents, so using
+# --model claude-opus-4-8 needs only ANTHROPIC_API_KEY in .env — no extra install.
+
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["research_agent", "tools", "run"]
