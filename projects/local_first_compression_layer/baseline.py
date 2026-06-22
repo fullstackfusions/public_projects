@@ -6,13 +6,17 @@ Usage:
   python baseline.py
 """
 
+import argparse
 import json
+import sys
+from pathlib import Path
+
 from projects.local_first_compression_layer.graph import run
 from projects.local_first_compression_layer.config import MODEL
 
 
-def main():
-    print(f"[baseline] model={MODEL}  compression=OFF")
+def main(out: str | None = None):
+    print(f"[baseline] model={MODEL}  compression=OFF", file=sys.stderr)
     state = run(with_compression=False)
 
     result = {
@@ -27,8 +31,12 @@ def main():
         "answer_preview": state["answer"][:400] + ("..." if len(state["answer"]) > 400 else ""),
     }
     print(json.dumps(result, indent=2))
+    if out:
+        Path(out).write_text(json.dumps(result, indent=2))
     return result
 
 
 if __name__ == "__main__":
-    main()
+    p = argparse.ArgumentParser()
+    p.add_argument("--out", help="write the result JSON to this path")
+    main(p.parse_args().out)

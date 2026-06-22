@@ -23,8 +23,16 @@ MODELS = {
 # Change this to whichever model you have available
 MODEL = MODELS["qwen-7b"]
 
-# Headroom compression target ratio for prose (0.0–1.0, lower = more aggressive)
+# Headroom compression target ratio for prose (0.0–1.0, lower = more aggressive).
+# Only takes effect when Kompress (the ML prose compressor) is enabled; the
+# rule-based compressors (SmartCrusher, CodeCompressor) ignore it.
 PROSE_RATIO = 0.4
+
+# Kompress = Headroom's HuggingFace extractive prose compressor (ML, ~ONNX on CPU).
+# "disabled" → rule-based only (SmartCrusher + CodeCompressor, deterministic).
+# A model id  → enable Kompress on prose (non-deterministic, opt-in escalation).
+KOMPRESS_DISABLED = "disabled"
+KOMPRESS_MODEL = "chopratejas/kompress-v2-base"
 
 USER_QUERY = (
     "Which platform team engineers have deploy permissions? "

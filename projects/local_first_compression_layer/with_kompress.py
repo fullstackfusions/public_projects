@@ -1,9 +1,14 @@
 """
-Compressed run: retrieve → compress → generate.
-headroom compress() fires in the compress node before Ollama sees the messages.
+Compressed run WITH Kompress: retrieve → compress → generate.
+Same pipeline as with_headroom.py, but the compress node also runs Kompress —
+Headroom's HuggingFace extractive prose compressor — on the prose blocks.
+
+This is the opt-in escalation: more reduction, but the ML model is
+non-deterministic, so the exact compressed input is no longer guaranteed
+reproducible across runs.
 
 Usage:
-  python with_headroom.py
+  python with_kompress.py
 """
 
 import argparse
@@ -12,17 +17,17 @@ import sys
 from pathlib import Path
 
 from projects.local_first_compression_layer.graph import run
-from projects.local_first_compression_layer.config import MODEL
+from projects.local_first_compression_layer.config import MODEL, KOMPRESS_MODEL
 
 
 def main(out: str | None = None):
-    print(f"[headroom] model={MODEL}  compression=ON  (rule-based: SmartCrusher + CodeCompressor)",
-          file=sys.stderr)
-    state = run(with_compression=True)
+    print(f"[kompress] model={MODEL}  compression=ON  kompress={KOMPRESS_MODEL}", file=sys.stderr)
+    state = run(with_compression=True, kompress=True)
 
     result = {
-        "run": "with_headroom",
+        "run": "with_kompress",
         "model": MODEL,
+        "kompress_model": KOMPRESS_MODEL,
         "compression_applied": state["compression_applied"],
         "raw_token_estimate": state["raw_token_estimate"],
         "send_token_estimate": state["send_token_estimate"],
