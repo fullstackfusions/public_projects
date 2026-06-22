@@ -1,0 +1,29 @@
+{
+  "baseline": {
+    "run": "baseline",
+    "model": "qwen2.5:7b",
+    "compression_applied": false,
+    "raw_token_estimate": 3217,
+    "send_token_estimate": 3217,
+    "prompt_tokens_ollama": 3496,
+    "completion_tokens_ollama": 587,
+    "inference_time_s": 11.57,
+    "answer_preview": "Based on the provided user data, the platform team engineers who have deploy permissions are:\n\n- Alice Chen (usr_001)\n- Iris Novak (usr_008)\n- Karen Lee (usr_010)\n\nThese individuals belong to the \"platform\" team and have the \"deploy\" permission in their `permissions` list.\n\nRegarding how Headroom's `compress()` function routes content to the right compressor, here is a detailed explanation based o..."
+  },
+  "with_headroom": {
+    "run": "with_headroom",
+    "model": "qwen2.5:7b",
+    "compression_applied": true,
+    "raw_token_estimate": 3578,
+    "send_token_estimate": 3235,
+    "tokens_saved": 343,
+    "compression_ratio": 0.09586361095584126,
+    "transforms_applied": [
+      "router:tool_result:smart_crusher"
+    ],
+    "prompt_tokens_ollama": 3174,
+    "completion_tokens_ollama": 405,
+    "inference_time_s": 11.06,
+    "answer_preview": "### Deploy Permissions\n\nThe following platform team engineers have deploy permissions:\n\n- **Alice Chen** (`usr_001`): Has `deploy` permission.\n- **Iris Novak** (`usr_008`): Has `deploy` permission.\n\nThese individuals belong to the \"platform\" team and are granted the `deploy` permission, which allows them to deploy changes or configurations within the system.\n\n### Headroom's Compress Function\n\nThe ..."
+  }
+}
