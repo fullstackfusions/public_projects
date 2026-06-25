@@ -1,0 +1,23 @@
+{
+  "total_chunks": 1038,
+  "total_tokens": 530702,
+  "sources": [
+    {
+      "file": "Machine Learning for Algorithmic Trading (2nd Edition).pdf",
+      "pages": 856,
+      "chunks": 779,
+      "tokens": 398621,
+      "elapsed_s": 1.83
+    },
+    {
+      "file": "law-compliance-in-ai-security-data-protection-1.pdf",
+      "pages": 220,
+      "chunks": 259,
+      "tokens": 132081,
+      "elapsed_s": 0.61
+    }
+  ],
+  "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "chunk_size": 512,
+  "chunk_overlap": 64
+}
