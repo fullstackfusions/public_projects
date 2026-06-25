@@ -1,0 +1,13 @@
+headroom-ai[all]
+langchain>=0.3.0
+langchain-ollama>=0.2.0
+langchain-core>=0.3.0
+langgraph>=0.2.0
+sentence-transformers>=3.0.0
+flashrank>=0.2.9
+tiktoken
+numpy
+rich
+python-dotenv
+# optional — only needed for the off-premises Cohere contrast (Config D):
+# cohere>=5.0.0

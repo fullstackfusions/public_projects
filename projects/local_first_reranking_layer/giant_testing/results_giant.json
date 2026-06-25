@@ -1,0 +1,60 @@
+{
+  "model": "qwen3:8b",
+  "manifest": {
+    "total_chunks": 1038,
+    "total_tokens": 530702,
+    "sources": [
+      {
+        "file": "Machine Learning for Algorithmic Trading (2nd Edition).pdf",
+        "pages": 856,
+        "chunks": 779,
+        "tokens": 398621,
+        "elapsed_s": 1.83
+      },
+      {
+        "file": "law-compliance-in-ai-security-data-protection-1.pdf",
+        "pages": 220,
+        "chunks": 259,
+        "tokens": 132081,
+        "elapsed_s": 0.61
+      }
+    ],
+    "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "chunk_size": 512,
+    "chunk_overlap": 64
+  },
+  "top_n": 30,
+  "anchor_avg_raw_topn_tok": 15354,
+  "ksweep": [
+    {
+      "top_k": 20,
+      "correct": "12/12",
+      "avg_sent_tok": 11089,
+      "avg_prompt_tok": 10959
+    },
+    {
+      "top_k": 10,
+      "correct": "12/12",
+      "avg_sent_tok": 5549,
+      "avg_prompt_tok": 5511
+    },
+    {
+      "top_k": 5,
+      "correct": "12/12",
+      "avg_sent_tok": 2775,
+      "avg_prompt_tok": 2807
+    },
+    {
+      "top_k": 3,
+      "correct": "12/12",
+      "avg_sent_tok": 1669,
+      "avg_prompt_tok": 1706
+    },
+    {
+      "top_k": 1,
+      "correct": "12/12",
+      "avg_sent_tok": 560,
+      "avg_prompt_tok": 626
+    }
+  ]
+}
