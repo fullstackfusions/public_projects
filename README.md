@@ -124,6 +124,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`voicebox_agent`](./projects/voicebox_agent/) | AI / Voice | Python, Voicebox, MCP | Local voice notifications for CLI pipelines and AI agents using the Voicebox REST API. |
 | [`agent_harness`](./projects/agent_harness/) | AI / LLM | Python, LangGraph, LangChain, Ollama | Three experiments showing how harness infrastructure (planning, memory, verification, sandboxing, sub-agents) determines agent reliability — measured rung-by-rung via a controlled benchmark. |
 | [`local_first_compression_layer`](./projects/local_first_compression_layer/) | AI / LLM | LangGraph, LangChain, Ollama, Headroom | RAG pipeline with Headroom as a compression node; compares a baseline graph against a compressed graph using local Ollama models (Qwen / DeepSeek / GLM). |
+| [`local_first_reranking_layer`](./projects/local_first_reranking_layer/) | AI / LLM | sentence-transformers, FlashRank, BGE, Ollama | Local-first RAG reranking benchmark: bi-encoder retrieval → CPU cross-encoder rerank (FlashRank/BGE) → compress → qwen3:8b. Giant-scale run cuts 530K → 560 tokens (948×) at 12/12 correct. |
 | [`rust_token_killer`](./projects/rust_token_killer/) | AI / LLM | LangGraph, Python, Ollama | LangGraph demo that benchmarks token savings by compressing shell commands via RTK before sending to a local Qwen2.5 agent — raw vs. compressed mode comparison. |
 
 
