@@ -1,0 +1,28 @@
+# pgvector for Mem0's declarative memory store.
+# Same local-first principle as the rest of the stack — no hosted service.
+#
+#   docker compose up -d
+#   docker compose exec pgvector psql -U mem0user -d mem0db -c "CREATE EXTENSION IF NOT EXISTS vector;"
+#
+# (setup.sh does both of these plus the Ollama pulls.)
+
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: pgvector-mem0
+    environment:
+      POSTGRES_USER: mem0user
+      POSTGRES_PASSWORD: mem0pass
+      POSTGRES_DB: mem0db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mem0user -d mem0db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgvector_data:

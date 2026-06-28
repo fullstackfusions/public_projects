@@ -1,0 +1,9 @@
+# Runtime output — written by sessions, commit deliberately with measured numbers.
+results_session.json
+
+# Local env
+.env
+
+# Python
+__pycache__/
+*.pyc

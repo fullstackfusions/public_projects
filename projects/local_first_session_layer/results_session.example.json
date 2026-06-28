@@ -1,0 +1,58 @@
+{
+  "_note": "Illustrative shape only. Real numbers are produced by running session_a.py then session_b.py against a live qwen3:8b + pgvector. Do not cite these as measured.",
+  "session_a": {
+    "session_id": "11111111-1111-1111-1111-111111111111",
+    "query": "What is the capital buffer requirement for Category 2 institutions under the March 2026 OSFI update?",
+    "model": "qwen3:8b",
+    "verification_status": "VERIFIED",
+    "session_tokens_approx": 180,
+    "facts_extracted": 4,
+    "compression_ratio": 45.0,
+    "facts": [
+      {
+        "fact": "OSFI Guideline B-20 (March 2026 revision), Section 4.1 sets the capital buffer for Category 2 institutions at 2.5% of risk-weighted assets, effective Q2 2026.",
+        "confidence": "high",
+        "source_type": "verified",
+        "guideline_ref": "OSFI-B20-v3.2 clause 4.1"
+      },
+      {
+        "fact": "The 2.5% Category 2 buffer supersedes the previous 2.0% requirement from the 2023 revision.",
+        "confidence": "high",
+        "source_type": "verified",
+        "guideline_ref": "OSFI-B20-v3.2 clause 4.1"
+      }
+    ],
+    "provenance": {
+      "langfuse_trace_id": "trace_11111111",
+      "ccr_content_id": "chunk_247_osfi_b20_2026",
+      "source_document": "osfi_b20_2026.pdf"
+    },
+    "mem0_ids": ["mem-aaaa", "mem-bbbb"]
+  },
+  "session_b": {
+    "session_id": "22222222-2222-2222-2222-222222222222",
+    "query": "What capital buffer percentage applies to Tier 2 institutions per recent OSFI guidance?",
+    "model": "qwen3:8b",
+    "facts_retrieved": 2,
+    "retrieved_facts": [
+      {
+        "memory": "OSFI Guideline B-20 (March 2026 revision) sets the Category 2 capital buffer at 2.5% of risk-weighted assets, effective Q2 2026.",
+        "session_id": "11111111-1111-1111-1111-111111111111",
+        "langfuse_trace_id": "trace_11111111",
+        "ccr_content_id": "chunk_247_osfi_b20_2026"
+      }
+    ],
+    "answer": "Tier 2 (Category 2) institutions must hold a 2.5% capital buffer of risk-weighted assets under OSFI B-20 (March 2026), effective Q2 2026 — superseding the prior 2.0%. [VERIFIED, source: osfi_b20_2026.pdf, B-20 s.4.1, p.34]",
+    "provenance_chain_closed": true,
+    "corpus_retrieval_needed": false
+  },
+  "metrics": {
+    "session_a_tokens": 180,
+    "facts_stored": 2,
+    "compression_ratio": 90.0,
+    "session_b_retrieved": 1,
+    "provenance_chain_closed": true,
+    "cross_session_answer_consistent": true,
+    "corpus_retrieval_needed": false
+  }
+}
