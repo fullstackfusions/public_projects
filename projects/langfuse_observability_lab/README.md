@@ -161,6 +161,64 @@ the whole point: it's not that Langfuse can't show you retries, it's that
 retries buried below your instrumentation boundary don't get seen unless you
 deliberately span them.
 
+## Live streaming server (steering + cancel, no timeout-guessing)
+
+`run.py` runs one query start-to-finish and prints a trace URL afterwards.
+`server.py` is the other mode: a WebSocket server that streams the
+supervisor's progress live — routing decisions, tool calls, tokens — as they
+happen, and accepts a new query or a cancel *while a run is still in
+flight*. This is the direct answer to "instead of guessing a timeout, let
+the user watch it happen and steer/cancel themselves."
+
+### Run it
+
+```bash
+cd langfuse_observability_lab
+uvicorn server:app --reload --port 8000
+```
+
+Open **http://localhost:8000/** in a browser. That's a plain HTML/JS test
+page (`static/index.html`) served by the same app — no separate frontend
+build needed.
+
+### What to try
+
+1. **Watch a normal run.** Send `Run 'show interfaces status' on core-sw-01.`
+   and watch the live log: `network_agent started` → `tool_start` →
+   `tool_end` → tokens streaming in → `FINAL`.
+2. **Mid-flight steering.** Send `Ping subnet 10.0.0.0/29 and tell me if
+   anything is down.`, then — while it's still running — type a second,
+   different query and hit "Send query" again. It doesn't start a second
+   run; it's queued and picked up at the *next* supervisor hop (you'll see
+   a pink "queued steering input" line, then the supervisor's next routing
+   decision reacting to it). This only ever takes effect between hops, never
+   mid-tool-call, so an in-flight MCP call always finishes cleanly.
+3. **Soft cancel.** Send `Run 'show version' on dead-host-04.` (a ~timeout
+   scenario) and hit "Cancel (soft)". The current tool call is allowed to
+   finish/fail on its own; the supervisor then force-finishes instead of
+   routing further.
+4. **Hard cancel.** Same query, but hit "Cancel (hard)" — the whole run is
+   cancelled immediately via `asyncio.Task.cancel()`, mid-call. Fine for
+   read-only tools; think twice before doing this for a tool with real
+   side effects (a refund call cut off mid-flight has no record of whether
+   it completed).
+
+### How it's wired
+
+- `graph.astream_events(..., version="v2")` emits every node/tool/token
+  event as the graph runs — the same callback machinery the Langfuse
+  `CallbackHandler` uses, so this run is traced in Langfuse exactly like any
+  `run.py` invocation (session-tagged `live-stream`), with zero extra
+  instrumentation.
+- Steering: a per-connection `asyncio.Queue`, drained at the top of
+  `supervisor_node` (`agents/supervisor.py`) before it makes its next
+  routing decision — see the "Mid-flight steering" comment there.
+- Cancel: a per-connection `asyncio.Event` checked at the same point (soft),
+  or a direct `task.cancel()` on the run's `asyncio.Task` (hard).
+- The steering/cancel objects travel through `config["configurable"]`,
+  the same `config` dict that already carries the Langfuse callback handler
+  down through every subagent call — one plumbing mechanism doing both jobs.
+
 ## What to actually look at in Langfuse
 
 This is the point of the exercise — map each UI feature back to the

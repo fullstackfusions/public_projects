@@ -14,6 +14,8 @@ dependencies = [
     "langfuse>=3.0.0",
     "python-dotenv>=1.0.1",
     "rich>=13.9.4",
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.32.1",
 ]
 
 [build-system]
@@ -21,4 +23,4 @@ requires = ["setuptools>=82.0.1"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["run"]
+py-modules = ["run", "server"]

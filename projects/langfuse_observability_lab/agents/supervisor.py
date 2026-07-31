@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal, TypedDict
 
-from langchain_core.messages import AnyMessage, SystemMessage
+from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
@@ -54,14 +54,31 @@ def build_supervisor_graph(ops_agent, support_agent, network_agent):
     router_model = get_chat_model().with_structured_output(Route)
 
     async def supervisor_node(state: SupervisorState, config):
+        configurable = (config or {}).get("configurable", {})
         hops = state.get("hops", 0)
-        if hops >= MAX_HOPS:
-            return {"next": "finish", "hops": hops}
 
+        # Mid-flight steering: pick up anything the user pushed in while a
+        # subagent hop was running. Only checked here, at the boundary
+        # between hops -- never mid-tool-call, so an in-flight MCP call
+        # always finishes cleanly rather than being yanked mid-side-effect.
+        steered: list[AnyMessage] = []
+        steering_queue = configurable.get("steering_queue")
+        if steering_queue is not None:
+            while not steering_queue.empty():
+                steered.append(HumanMessage(content=steering_queue.get_nowait()))
+
+        cancel_event = configurable.get("cancel_event")
+        if cancel_event is not None and cancel_event.is_set():
+            return {"next": "finish", "hops": hops, "messages": steered}
+
+        if hops >= MAX_HOPS:
+            return {"next": "finish", "hops": hops, "messages": steered}
+
+        messages = [*state["messages"], *steered]
         route = await router_model.ainvoke(
-            [SystemMessage(SUPERVISOR_PROMPT), *state["messages"]], config=config
+            [SystemMessage(SUPERVISOR_PROMPT), *messages], config=config
         )
-        return {"next": route.agent, "hops": hops + 1}
+        return {"next": route.agent, "hops": hops + 1, "messages": steered}
 
     async def ops_node(state: SupervisorState, config):
         result = await ops_agent.ainvoke({"messages": state["messages"]}, config=config)

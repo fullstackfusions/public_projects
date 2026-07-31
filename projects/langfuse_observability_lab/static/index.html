@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Langfuse Observability Lab — live stream test page</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+  h1 { font-size: 1.1rem; color: #444; }
+  #status { font-size: 0.85rem; color: #888; margin-bottom: 1rem; }
+  #status.connected { color: #1a7f37; }
+  .row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+  input[type=text] { flex: 1; padding: 0.5rem; font-size: 1rem; }
+  button { padding: 0.5rem 0.9rem; font-size: 0.9rem; cursor: pointer; }
+  button.danger { background: #fde2e1; border-color: #d9534f; }
+  button.soft { background: #fff3cd; }
+  #log { border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; height: 420px; overflow-y: auto; background: #fafafa; font-size: 0.85rem; }
+  .line { margin: 0.15rem 0; white-space: pre-wrap; }
+  .node_start { color: #0b6; font-weight: bold; }
+  .node_end { color: #999; }
+  .tool_start { color: #06c; }
+  .tool_end { color: #069; }
+  .token { color: #333; }
+  .steered { color: #a06; font-weight: bold; }
+  .final { color: #1a7f37; font-weight: bold; }
+  .cancelled { color: #b00; font-weight: bold; }
+  .error { color: #b00; }
+</style>
+</head>
+<body>
+  <h1>Langfuse Observability Lab — live supervisor stream</h1>
+  <div id="status">disconnected</div>
+
+  <div class="row">
+    <input id="query" type="text" placeholder="e.g. Run 'show interfaces status' on flaky-fw-03." />
+    <button id="send">Send query</button>
+  </div>
+  <div class="row">
+    <button id="cancelSoft" class="soft">Cancel (soft — waits for current hop)</button>
+    <button id="cancelHard" class="danger">Cancel (hard — immediate)</button>
+  </div>
+
+  <div id="log"></div>
+
+  <p style="font-size:0.8rem;color:#888">
+    Try it: send a query, then while it's still running, type another one
+    and hit "Send query" again — it's queued as mid-flight steering input and
+    picked up at the next supervisor hop (watch for the pink "steered" line
+    and a routing decision that reacts to it). Or hit a cancel button
+    mid-run and watch the difference between soft and hard.
+  </p>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const logEl = document.getElementById("log");
+    const queryEl = document.getElementById("query");
+
+    let ws = null;
+
+    function log(kind, text) {
+      const div = document.createElement("div");
+      div.className = "line " + kind;
+      div.textContent = text;
+      logEl.appendChild(div);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function connect() {
+      ws = new WebSocket(`ws://${location.host}/ws`);
+      ws.onopen = () => {
+        statusEl.textContent = "connected";
+        statusEl.className = "connected";
+      };
+      ws.onclose = () => {
+        statusEl.textContent = "disconnected — reconnecting in 1s";
+        statusEl.className = "";
+        setTimeout(connect, 1000);
+      };
+      ws.onmessage = (evt) => {
+        const msg = JSON.parse(evt.data);
+        if (msg.type === "event") {
+          if (msg.kind === "token") {
+            log("token", msg.data);
+          } else if (msg.kind === "tool_start") {
+            log("tool_start", `-> tool_start [${msg.node}] ${JSON.stringify(msg.data)}`);
+          } else if (msg.kind === "tool_end") {
+            log("tool_end", `<- tool_end [${msg.node}] ${msg.data}`);
+          } else if (msg.kind === "node_start") {
+            log("node_start", `\n=== ${msg.node} started ===`);
+          } else if (msg.kind === "node_end") {
+            log("node_end", `=== ${msg.node} finished ===`);
+          } else if (msg.kind === "steered") {
+            log("steered", `>>> queued steering input: "${msg.data}"`);
+          }
+        } else if (msg.type === "final") {
+          log("final", `\nFINAL: ${msg.text}`);
+        } else if (msg.type === "cancelled") {
+          log("cancelled", "\n-- cancelled --");
+        } else if (msg.type === "error") {
+          log("error", `\nERROR: ${msg.message}`);
+        }
+      };
+    }
+    connect();
+
+    document.getElementById("send").onclick = () => {
+      const text = queryEl.value.trim();
+      if (!text || ws.readyState !== WebSocket.OPEN) return;
+      log("line", `\n>>> query: ${text}`);
+      ws.send(JSON.stringify({ type: "query", text }));
+      queryEl.value = "";
+    };
+    queryEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("send").click();
+    });
+
+    document.getElementById("cancelSoft").onclick = () => {
+      ws.send(JSON.stringify({ type: "cancel", mode: "soft" }));
+    };
+    document.getElementById("cancelHard").onclick = () => {
+      ws.send(JSON.stringify({ type: "cancel", mode: "hard" }));
+    };
+  </script>
+</body>
+</html>
