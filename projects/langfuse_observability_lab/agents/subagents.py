@@ -14,6 +14,7 @@ import os
 from langchain.agents import create_react_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
+from agents.network_client import wrap_tools_with_retry
 from llm import get_chat_model
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,8 +31,18 @@ SUPPORT_AGENT_PROMPT = (
     "support tickets using your tools. Do not answer from memory if a tool can confirm it."
 )
 
+NETWORK_AGENT_PROMPT = (
+    "You are the network subagent. You run CLI commands on network devices, "
+    "resolve DNS names, and check reachability with ping. Use your tools; do not "
+    "guess device output. When run_commands returns per-device results, check each "
+    "one -- a batch call can succeed overall while individual devices in it failed. "
+    "Likewise, ping_check returning 100% loss for a host is a real outage, not an "
+    "error to ignore just because the tool call itself succeeded. If a tool call "
+    "fails outright, report the failure plainly instead of pretending it succeeded."
+)
 
-async def _build_agent(server_name: str, script: str, system_prompt: str):
+
+async def _load_tools(server_name: str, script: str):
     client = MultiServerMCPClient(
         {
             server_name: {
@@ -41,7 +52,11 @@ async def _build_agent(server_name: str, script: str, system_prompt: str):
             }
         }
     )
-    tools = await client.get_tools()
+    return await client.get_tools()
+
+
+async def _build_agent(server_name: str, script: str, system_prompt: str):
+    tools = await _load_tools(server_name, script)
     model = get_chat_model()
     return create_react_agent(model, tools, prompt=system_prompt)
 
@@ -52,3 +67,14 @@ async def build_ops_agent():
 
 async def build_support_agent():
     return await _build_agent("knowledge", "knowledge_server.py", SUPPORT_AGENT_PROMPT)
+
+
+async def build_network_agent(*, traced_retries: bool = False):
+    """traced_retries controls how the retry loop around each network tool
+    call is instrumented -- see agents/network_client.py. Run the same
+    flaky-device scenario with both settings to see the difference in
+    Langfuse directly."""
+    tools = await _load_tools("network", "network_server.py")
+    tools = wrap_tools_with_retry(tools, traced=traced_retries)
+    model = get_chat_model()
+    return create_react_agent(model, tools, prompt=NETWORK_AGENT_PROMPT)

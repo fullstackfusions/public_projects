@@ -24,6 +24,7 @@ and decide which subagent should act next, or whether the conversation is done:
 
 - "ops_agent": order status, refunds, amount calculations.
 - "support_agent": policy questions (returns, shipping, password reset), ticket lookups.
+- "network_agent": running commands on network devices, DNS lookups, ping/reachability checks.
 - "finish": the last subagent's message already answers the user; nothing more to do.
 
 Route to exactly one subagent per turn. If the user's request has multiple
@@ -32,7 +33,7 @@ on a later turn -- do not try to do both at once."""
 
 
 class Route(BaseModel):
-    agent: Literal["ops_agent", "support_agent", "finish"] = Field(
+    agent: Literal["ops_agent", "support_agent", "network_agent", "finish"] = Field(
         description="Which subagent should act next, or 'finish' if done."
     )
     reason: str = Field(description="One sentence on why this route was chosen.")
@@ -44,10 +45,11 @@ class SupervisorState(TypedDict):
     hops: int
 
 
-def build_supervisor_graph(ops_agent, support_agent):
-    """ops_agent / support_agent are pre-built compiled subagent graphs
-    (see agents.subagents) -- built once per process and reused across hops,
-    same as you'd do with long-lived agent objects in a real service."""
+def build_supervisor_graph(ops_agent, support_agent, network_agent):
+    """ops_agent / support_agent / network_agent are pre-built compiled
+    subagent graphs (see agents.subagents) -- built once per process and
+    reused across hops, same as you'd do with long-lived agent objects in a
+    real service."""
 
     router_model = get_chat_model().with_structured_output(Route)
 
@@ -69,6 +71,10 @@ def build_supervisor_graph(ops_agent, support_agent):
         result = await support_agent.ainvoke({"messages": state["messages"]}, config=config)
         return {"messages": [result["messages"][-1]]}
 
+    async def network_node(state: SupervisorState, config):
+        result = await network_agent.ainvoke({"messages": state["messages"]}, config=config)
+        return {"messages": [result["messages"][-1]]}
+
     def route_from_supervisor(state: SupervisorState) -> str:
         return state["next"] if state["next"] != "finish" else END
 
@@ -76,17 +82,24 @@ def build_supervisor_graph(ops_agent, support_agent):
     graph.add_node("supervisor", supervisor_node)
     graph.add_node("ops_agent", ops_node)
     graph.add_node("support_agent", support_node)
+    graph.add_node("network_agent", network_node)
 
     graph.set_entry_point("supervisor")
     graph.add_conditional_edges(
         "supervisor",
         route_from_supervisor,
-        {"ops_agent": "ops_agent", "support_agent": "support_agent", END: END},
+        {
+            "ops_agent": "ops_agent",
+            "support_agent": "support_agent",
+            "network_agent": "network_agent",
+            END: END,
+        },
     )
-    # Both subagents report back to the supervisor, which decides whether to
+    # All subagents report back to the supervisor, which decides whether to
     # finish or hand off again -- this is the "back and forth" that gets
     # hard to debug without per-hop tracing.
     graph.add_edge("ops_agent", "supervisor")
     graph.add_edge("support_agent", "supervisor")
+    graph.add_edge("network_agent", "supervisor")
 
     return graph.compile()

@@ -14,13 +14,19 @@ step 4." This project builds that exact shape end-to-end and wires
 user query
     │
     ▼
- supervisor (LLM #1)  ── decides: ops_agent | support_agent | finish
-    │                                   │
-    ├──────────────► ops_agent (LLM #2, ReAct loop)
+ supervisor (LLM #1)  ── decides: ops_agent | support_agent | network_agent | finish
+    │                                   │                          │
+    ├──────────────► ops_agent (ReAct loop)                        │
     │                     └── MCP tools: get_order_status, refund_order, calculate
-    │
-    └──────────────► support_agent (LLM #2', ReAct loop)
-                          └── MCP tools: search_docs, lookup_ticket
+    │                                                               │
+    ├──────────────► support_agent (ReAct loop)                    │
+    │                     └── MCP tools: search_docs, lookup_ticket │
+    │                                                               │
+    └──────────────► network_agent (ReAct loop) ◄───────────────────┘
+                          └── MCP tools: run_command, run_commands,
+                                         dns_lookup, ping_check
+                              (each call wrapped in a retry loop —
+                               opaque or traced, see below)
 
  subagent replies ──► back to supervisor ──► finish, or hand off again
 ```
@@ -34,10 +40,23 @@ user query
   tools pulled live from an MCP server via `langchain-mcp-adapters`, not
   hand-coded LangChain tools. That's deliberate: it reproduces the MCP
   client/server boundary your real system has.
-- `mcp_servers/ops_server.py`, `mcp_servers/knowledge_server.py` — two
-  standalone MCP servers (stdio transport) with a handful of mock tools. One
-  tool (`refund_order` on order `ORD-999`) always raises, on purpose, so you
-  have a real failure to look at instead of only the happy path.
+- `mcp_servers/ops_server.py`, `mcp_servers/knowledge_server.py`,
+  `mcp_servers/network_server.py` — three standalone MCP servers (stdio
+  transport) with mock tools. Several failures are deliberate, not bugs:
+  - `refund_order` on order `ORD-999` always raises.
+  - `network_server.py`'s `flaky-fw-03` device drops the first 2 of every 3
+    connection attempts, then succeeds on the 3rd — this is the "gateway
+    silently drops, we only find out after retries fail" scenario.
+  - `network_server.py`'s `dead-host-04` always times out — retries never
+    help, they just delay the inevitable failure.
+  - `ping_check` reports 100% packet loss for `10.0.0.99` as normal (non-error)
+    output — a silently degraded result, not an exception.
+  - `run_commands` (bulk, multi-device) catches per-device errors and returns
+    them as data instead of raising, so a batch call can look like one clean
+    green span while individual devices inside it failed.
+- `agents/network_client.py` — wraps every network tool call in a 3-attempt
+  retry loop, in two flavors (`traced=False`/`True`) you can compare directly.
+  See "Retries: opaque vs. traced" below.
 - `observability/langfuse_setup.py` — the actual integration. Everything
   else in this repo is scaffolding to give it something realistic to trace.
 
@@ -94,11 +113,53 @@ python run.py "Confirm the return policy covers order ORD-200, then refund the f
 # Deliberate failure — refund_order raises for this order id
 python run.py "Please refund the full amount for order ORD-999."
 
-# Or run all 4 scripted scenarios under one shared session_id:
+# Network device commands, bulk batch, DNS, ping/subnet
+python run.py "Run 'show version' on core-sw-01."
+python run.py "Run 'show version' on core-sw-01 and 'show interfaces' on edge-rtr-02."
+python run.py "Resolve flaky-fw-03.lab.internal."
+python run.py "Ping subnet 10.0.0.0/29 and tell me if anything is down."
+
+# Flaky device — retries happen invisibly by default
+python run.py "Run 'show interfaces status' on flaky-fw-03."
+# Same query, but each retry attempt gets its own Langfuse span
+python run.py "Run 'show interfaces status' on flaky-fw-03." --traced-retries
+
+# Dead host — retries are exhausted, then it fails for real
+python run.py "Run 'show version' on dead-host-04."
+
+# Or run the full scripted set (all of the above, plus the opaque-vs-traced
+# comparison run twice) under one shared session_id:
 python run.py --demo --user alice
 ```
 
 Each run prints a Langfuse trace URL. Open it.
+
+## Retries: opaque vs. traced
+
+This is the direct answer to "does Langfuse catch it when our gateway
+silently retries 3 times before we find out": **only if the retry is visible
+to something Langfuse is watching.** `agents/network_client.py` implements
+the exact same retry loop two ways so you can see the difference instead of
+taking that on faith:
+
+- **Opaque** (default): a plain try/except loop around the tool call. From
+  LangChain/Langfuse's point of view, one tool call happened — you'll see a
+  single `run_command` span whose duration is inflated by however many
+  silent attempts it took, with no breakdown of "2 dropped connections then
+  a working one" vs. "just slow." This is what you get for free from most
+  gateway SDKs, and it's the actual blind spot.
+- **Traced** (`--traced-retries`, or the network_agent built with
+  `traced_retries=True`): the identical retry loop, except each attempt
+  opens its own `gateway-attempt-N` span nested under the tool call, with
+  its own status and captured exception. Same retry behavior underneath —
+  completely different trace.
+
+Run the flaky-device query both ways (or just `python run.py --demo`, which
+runs the comparison automatically) and compare the two traces side by side —
+same session, tagged `opaque-retry` and `traced-retry`. That side-by-side is
+the whole point: it's not that Langfuse can't show you retries, it's that
+retries buried below your instrumentation boundary don't get seen unless you
+deliberately span them.
 
 ## What to actually look at in Langfuse
 
@@ -113,8 +174,11 @@ complaint it solves:
 | "Metrics" | Dashboards tab: latency percentiles, error rate, token throughput, cost — sliceable by the `tags` this project attaches per scenario (e.g. `deliberate-failure`, `multi-hop`). |
 | "Response details" | Every span's input/output is captured verbatim, including intermediate tool-call arguments and results — the stuff you'd otherwise have to reconstruct from scattered log lines. |
 | "Chaos from back-and-forth" | Run the multi-hop scenario and read the trace top to bottom: supervisor's routing *reason* is captured at each hop, so you can see exactly why it bounced between agents instead of guessing. |
-| Grouping requests from the same conversation/user | **Sessions** tab, filtered by the `session_id` this project sets — the `--demo` run groups all 4 scenarios under one session on purpose. |
+| Grouping requests from the same conversation/user | **Sessions** tab, filtered by the `session_id` this project sets — `--demo` groups every scenario under one session on purpose. |
 | Was this response actually correct? | **Scores**: `run.py` attaches a `task_success` score (1/0, rule-based here) to every trace after it finishes. Swap in an LLM-as-judge or human review queue for real evals — same API. |
+| "Gateway silently retries, we only find out after 3 fail" | Run the flaky-device query with and without `--traced-retries` (or `--demo`) and compare the two traces — one inflated span vs. three visible `gateway-attempt-N` spans. See "Retries: opaque vs. traced" below. |
+| "MCP call times out" | The `dead-host-04` scenario — its tool span is red with a `TimeoutError` and a duration you can alert on, nested under `network_agent`, nested under the request. |
+| A tool call that "succeeded" but the data underneath was bad | The subnet-ping scenario — `ping_check`'s span is green (no exception), but the JSON output for `10.0.0.99` shows 100% loss. And the bulk-command scenario — `run_commands`' span is green even though one of the three devices in it failed. Both are real gaps a red/green trace view alone won't catch; you still have to look at (or explicitly score) the payload. |
 
 ## Mapping this onto your real backend
 
@@ -135,20 +199,31 @@ you'd touch in your LangChain/LangGraph + MCP system:
    that branch of the trace silently detaches into its own trace instead of
    nesting — that's the #1 way people get a chaotic Langfuse view that
    mirrors the chaotic logs they started with.
-3. **Tag traces by which agent/MCP handled them.** `langfuse_tags` in the
+3. **Make retries visible or accept you won't see them.** If your enterprise
+   LLM gateway or MCP client retries internally before returning, Langfuse
+   sees one call with inflated latency, full stop — it cannot see inside a
+   library you don't control. Either use retry mechanisms that live above
+   your instrumentation boundary (e.g. LangChain's `.with_retry()`, called
+   with the same `config` so each attempt gets its own callback events), or,
+   when the retry genuinely has to live inside a vendored client, wrap it
+   yourself and open one span per attempt like `agents/network_client.py`
+   does. The same applies to your 120s-per-LLM-call timeout: a timeout that
+   raises shows up as a red generation span you can alert on; a timeout that
+   gets silently swallowed and retried by SDK code below LangChain does not.
+4. **Tag traces by which agent/MCP handled them.** `langfuse_tags` in the
    metadata dict (see `observability/langfuse_setup.py`) is cheap and makes
    the Traces table filterable by agent, which is normally the first thing
    you want when hunting a specific failure class ("show me every trace that
    touched the pricing MCP in the last hour").
-4. **Score outside the model.** Don't rely on the LLM to self-report success.
+5. **Score outside the model.** Don't rely on the LLM to self-report success.
    Attach scores after the fact from whatever signal you actually trust —
    a downstream status code, a user thumbs-up/down, a nightly LLM-judge
    batch job scoring recent traces via the Langfuse API.
-5. **Set `LANGFUSE_SAMPLE_RATE` (env var) once volume matters.** At demo
+6. **Set `LANGFUSE_SAMPLE_RATE` (env var) once volume matters.** At demo
    scale you want 100% capture; in production you typically don't need every
    trace, only errors and a sample of the rest — the SDK supports this
    without code changes.
-6. **If you self-host**, put the Langfuse `docker compose` stack behind your
+7. **If you self-host**, put the Langfuse `docker compose` stack behind your
    internal network, not exposed publicly — full LLM inputs/outputs land in
    ClickHouse/Postgres there, so treat it like any other system that stores
    your data.
@@ -163,3 +238,10 @@ you'd touch in your LangChain/LangGraph + MCP system:
 - Swap the rule-based `task_success` score in `run.py` for a second LLM call
   that judges the final answer against the query, and attach that score
   instead — a minimal LLM-as-judge eval wired to real traces.
+- In `agents/network_client.py`, add a real backoff (`await asyncio.sleep(2 ** attempt)`)
+  and rerun the flaky/dead-host scenarios — watch the trace durations actually
+  reflect the backoff instead of the near-instant demo timing.
+- Point `MAX_RETRIES` in `agents/network_client.py` at an env var and drop it
+  to 1 — rerun `dead-host-04` and see how much sooner the failure surfaces
+  end-to-end vs. exhausting 3 attempts first, which is the real tradeoff
+  behind "how many retries should our gateway do."
