@@ -126,6 +126,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`local_first_compression_layer`](./projects/local_first_compression_layer/) | AI / LLM | LangGraph, LangChain, Ollama, Headroom | RAG pipeline with Headroom as a compression node; compares a baseline graph against a compressed graph using local Ollama models (Qwen / DeepSeek / GLM). |
 | [`local_first_reranking_layer`](./projects/local_first_reranking_layer/) | AI / LLM | sentence-transformers, FlashRank, BGE, Ollama | Local-first RAG reranking benchmark: bi-encoder retrieval → CPU cross-encoder rerank (FlashRank/BGE) → compress → qwen3:8b. Giant-scale run cuts 530K → 560 tokens (948×) at 12/12 correct. |
 | [`rust_token_killer`](./projects/rust_token_killer/) | AI / LLM | LangGraph, Python, Ollama | LangGraph demo that benchmarks token savings by compressing shell commands via RTK before sending to a local Qwen2.5 agent — raw vs. compressed mode comparison. |
+| [`langfuse_observability_lab`](./projects/langfuse_observability_lab/) | AI / LLM / Observability | LangGraph, LangChain, MCP, Langfuse, Ollama | Hands-on Langfuse tracing for a supervisor -> subagent -> MCP-tools pipeline: nested trace trees, token usage/cost, a deliberate tool failure, sessions, and trace scoring. |
 
 
 ## ⚠️ Disclaimer

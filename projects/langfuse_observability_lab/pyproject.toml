@@ -1,0 +1,24 @@
+[project]
+name = "langfuse-observability-lab"
+version = "0.1.0"
+description = "Hands-on Langfuse observability for a LangGraph supervisor -> subagents -> MCP-tools pipeline (traces, token usage, cost, errors, sessions, evals)."
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.2.60",
+    "langchain>=0.3.14",
+    "langchain-core>=0.3.29",
+    "langchain-ollama>=0.2.2",
+    "langchain-openai>=0.2.14",
+    "langchain-mcp-adapters>=0.0.5",
+    "mcp>=1.1.2",
+    "langfuse>=3.0.0",
+    "python-dotenv>=1.0.1",
+    "rich>=13.9.4",
+]
+
+[build-system]
+requires = ["setuptools>=82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["run"]
