@@ -1,0 +1,9 @@
+{
+  "client_id": "",
+  "account_type": "Non-Registered",
+  "target_asset_mix": {"equity_pct": 0, "fixed_income_pct": 0},
+  "compliance_flag": false,
+  "objective": "",
+  "time_horizon_years": 0,
+  "review_frequency": "Annual"
+}
