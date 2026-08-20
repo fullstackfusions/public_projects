@@ -1,0 +1,3 @@
+__pycache__/
+*.pyc
+alertmanager/secrets/gmail_app_password

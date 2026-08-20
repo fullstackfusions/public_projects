@@ -1,0 +1,24 @@
+# Hand-written burn-rate alert, independent of `sloth generate`. Same math
+# as sloth/orders-slo.yaml's SLO (99% under 500ms, 28d) — lets email
+# alerting be tested end-to-end before the Sloth-generated rules exist.
+# Superseded by (or kept alongside) prometheus/rules/orders-slo-rules.yml
+# once `sloth generate` has been run.
+groups:
+  - name: orders-slo-manual
+    rules:
+      - alert: OrdersErrorBudgetBurn
+        expr: |
+          (
+            1 -
+            (
+              sum(rate(http_server_duration_milliseconds_bucket{http_target="/api/orders", le="500.0"}[1h]))
+              /
+              sum(rate(http_server_duration_milliseconds_count{http_target="/api/orders"}[1h]))
+            )
+          ) / (1 - 0.99) > 1
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: "/api/orders error budget burning too fast"
+          description: "Burn rate is above 1x the sustainable pace against the 99%/28d SLO — will exhaust the 28-day budget early if sustained."
