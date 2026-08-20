@@ -1,0 +1,25 @@
+# Gmail SMTP relay for alert emails. The app password itself is never in
+# this file — smtp_auth_password_file points at a local, gitignored file
+# (see ../secrets/README.md).
+global:
+  smtp_smarthost: "smtp.gmail.com:587"
+  smtp_from: "YOUR_GMAIL_ADDRESS@gmail.com"
+  smtp_auth_username: "YOUR_GMAIL_ADDRESS@gmail.com"
+  smtp_auth_password_file: "/etc/alertmanager/secrets/gmail_app_password"
+  smtp_require_tls: true
+
+route:
+  receiver: "email"
+  group_by: ["alertname"]
+  group_wait: 30s
+  group_interval: 5m
+  # 5m for demo/verification purposes - bump back to something like 4h
+  # before this is a real on-call config, or you'll get paged repeatedly
+  # for the same still-firing incident.
+  repeat_interval: 5m
+
+receivers:
+  - name: "email"
+    email_configs:
+      - to: "YOUR_ALERT_RECIPIENT@gmail.com"
+        send_resolved: true

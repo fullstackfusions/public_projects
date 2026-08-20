@@ -1,0 +1,59 @@
+{
+  "sarah": {
+    "client_id": "PROSPECT-1042",
+    "name": "Sarah Chen",
+    "meeting_platform": "Webex",
+    "transcript": [
+      {"speaker": "Advisor", "text": "Thanks for bringing your statements today, Sarah. What's on your mind for retirement?"},
+      {"speaker": "Sarah", "text": "I want to retire at 63. Honestly, I'm pretty worried about market volatility right now."},
+      {"speaker": "Sarah", "text": "I also need to save for my daughter's university in about 5 years."},
+      {"speaker": "Sarah", "text": "A big chunk of my portfolio is still in my old employer's tech stock -- I know that's concentrated."},
+      {"speaker": "Advisor", "text": "Got it. Let's see what the numbers say and I'll pull together a proposal live."}
+    ],
+    "statement": [
+      {"account_type": "Checking", "holding": "Cash", "value": 15000, "asset_class": "Cash"},
+      {"account_type": "Savings", "holding": "Cash", "value": 42000, "asset_class": "Cash"},
+      {"account_type": "401k", "holding": "Employer Tech Stock", "value": 210000, "asset_class": "Equity"},
+      {"account_type": "401k", "holding": "Total Bond Index", "value": 65000, "asset_class": "Fixed Income"},
+      {"account_type": "Brokerage", "holding": "S&P 500 ETF", "value": 98000, "asset_class": "Equity"}
+    ],
+    "risk_questionnaire": {"stated_risk": "Conservative-to-Moderate", "score": 4},
+    "extracted_profile": {
+      "total_assets": 430000,
+      "liquid_cash": 57000,
+      "concentration_flag": "38% of portfolio in single employer tech stock",
+      "goals": ["Retire at 63", "Fund daughter's university in 5 years"],
+      "risk_signals": ["worried about market volatility", "concentrated equity position"]
+    },
+    "retirement_age_default": 63,
+    "risk_tolerance_default": "moderate"
+  },
+  "marcus": {
+    "client_id": "PROSPECT-1077",
+    "name": "Marcus Okafor",
+    "meeting_platform": "Zoom",
+    "transcript": [
+      {"speaker": "Advisor", "text": "Marcus, walk me through what you're hoping to get out of investing this year."},
+      {"speaker": "Marcus", "text": "I want to retire at 55 if I can swing it. I'm not scared of risk -- I want growth."},
+      {"speaker": "Marcus", "text": "No kids, no big near-term goals, just want to build wealth as fast as reasonably possible."},
+      {"speaker": "Marcus", "text": "I've got a decent cash cushion already sitting idle that I know isn't working for me."},
+      {"speaker": "Advisor", "text": "Understood -- let's build something aggressive but still disciplined."}
+    ],
+    "statement": [
+      {"account_type": "Checking", "holding": "Cash", "value": 22000, "asset_class": "Cash"},
+      {"account_type": "Savings", "holding": "Cash", "value": 130000, "asset_class": "Cash"},
+      {"account_type": "Brokerage", "holding": "Growth Tech ETF", "value": 90000, "asset_class": "Equity"},
+      {"account_type": "RRSP", "holding": "Balanced Fund", "value": 40000, "asset_class": "Balanced"}
+    ],
+    "risk_questionnaire": {"stated_risk": "Aggressive Growth", "score": 8},
+    "extracted_profile": {
+      "total_assets": 282000,
+      "liquid_cash": 152000,
+      "concentration_flag": "54% of portfolio sitting idle in cash",
+      "goals": ["Retire at 55", "Maximize long-term growth"],
+      "risk_signals": ["comfortable with risk", "large idle cash cushion"]
+    },
+    "retirement_age_default": 55,
+    "risk_tolerance_default": "aggressive"
+  }
+}

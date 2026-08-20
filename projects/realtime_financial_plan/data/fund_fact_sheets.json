@@ -1,0 +1,10 @@
+[
+  {"fund_name": "Safe-Harbor Bond Fund", "risk_rating": 2, "historical_return_pct": 3.4, "asset_class": "Fixed Income"},
+  {"fund_name": "Steady Income Trust", "risk_rating": 3, "historical_return_pct": 4.1, "asset_class": "Fixed Income"},
+  {"fund_name": "Balanced Horizon Fund", "risk_rating": 4, "historical_return_pct": 5.6, "asset_class": "Balanced"},
+  {"fund_name": "Blue Chip Dividend Fund", "risk_rating": 5, "historical_return_pct": 6.8, "asset_class": "Equity"},
+  {"fund_name": "Global Tech Growth Fund", "risk_rating": 8, "historical_return_pct": 11.2, "asset_class": "Equity"},
+  {"fund_name": "Emerging Markets Opportunity Fund", "risk_rating": 9, "historical_return_pct": 12.7, "asset_class": "Equity"},
+  {"fund_name": "Diversified Core Equity Fund", "risk_rating": 6, "historical_return_pct": 8.2, "asset_class": "Equity"},
+  {"fund_name": "Short-Term Treasury Fund", "risk_rating": 1, "historical_return_pct": 2.1, "asset_class": "Fixed Income"}
+]

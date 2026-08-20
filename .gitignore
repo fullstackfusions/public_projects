@@ -92,3 +92,4 @@ localstack_data/
 floci_data/
 floci_volume/
 *.s3data
+parked/

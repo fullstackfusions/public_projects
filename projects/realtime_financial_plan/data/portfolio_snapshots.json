@@ -1,0 +1,4 @@
+{
+  "PROSPECT-1042": {"client_id": "PROSPECT-1042", "current_asset_mix": {"equity_pct": 72, "fixed_income_pct": 28}, "cash_position": 57000},
+  "PROSPECT-1077": {"client_id": "PROSPECT-1077", "current_asset_mix": {"equity_pct": 46, "fixed_income_pct": 14}, "cash_position": 152000}
+}

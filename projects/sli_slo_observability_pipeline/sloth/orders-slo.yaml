@@ -1,0 +1,44 @@
+# Sloth SLO spec (https://github.com/slok/sloth)
+#
+# Generate Prometheus recording + burn-rate alert rules with:
+#   sloth generate -i orders-slo.yaml -o ../prometheus/rules/orders-slo-rules.yml
+#
+# Requires the `http_server_duration_milliseconds_bucket` metric (see
+# ../prometheus/README.md) to already be flowing before the recording rules
+# produce non-empty series. Metric name/labels confirmed against a live run
+# on 2026-08-19 — auto-instrumentation reports duration in milliseconds
+# under `http_target` (not `http_route`), hence the 500 (ms) threshold below
+# rather than 0.5. Also confirmed the `le` bucket label is float-formatted
+# ("500.0", not "500") — an exact-match query on "500" silently returns no
+# series, which fails quietly rather than erroring.
+version: "prometheus/v1"
+service: "sli-slo-demo-app"
+labels:
+  owner: "platform-team"
+slos:
+  - name: "orders-latency"
+    objective: 99
+    description: "99% of /api/orders requests complete in under 500ms, rolling 28d window."
+    sli:
+      # error_query must count BAD events (over the 500ms threshold), not
+      # good ones — the le="500.0" bucket is a cumulative count of GOOD
+      # events, so errors = total - that bucket.
+      events:
+        error_query: |
+          sum(rate(http_server_duration_milliseconds_count{http_target="/api/orders"}[{{.window}}]))
+          -
+          sum(rate(http_server_duration_milliseconds_bucket{http_target="/api/orders", le="500.0"}[{{.window}}]))
+        total_query: |
+          sum(rate(http_server_duration_milliseconds_count{http_target="/api/orders"}[{{.window}}]))
+    alerting:
+      name: OrdersLatencySLOBreach
+      labels:
+        category: "latency"
+      annotations:
+        summary: "/api/orders error budget burning too fast"
+      page_alert:
+        labels:
+          severity: page
+      ticket_alert:
+        labels:
+          severity: ticket
