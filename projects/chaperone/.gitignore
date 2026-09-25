@@ -1,0 +1,21 @@
+# Terraform (state lives in S3, never in git)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.terraform.lock.hcl.bak
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+*.egg-info/
+# Web
+node_modules/
+dist/
+# Secrets and local config
+.env
+.env.*
+*.pem
+# Terraform build output (Lambda zips)
+.build/
