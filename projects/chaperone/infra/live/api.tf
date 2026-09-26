@@ -160,6 +160,8 @@ resource "aws_lambda_function" "api" {
   source_code_hash = data.archive_file.backend.output_base64sha256
   memory_size      = 512
   timeout          = 30
+  # The public site can't take more than this (D-031); edge caching absorbs repeats.
+  reserved_concurrent_executions = 10
   environment {
     variables = merge(local.lambda_env, {
       ACCOUNT_ID               = data.aws_caller_identity.me.account_id
