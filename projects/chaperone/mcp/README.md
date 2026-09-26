@@ -32,3 +32,9 @@ claude mcp add chaperone \
 ```bash
 CHAPERONE_API_URL=... AWS_PROFILE=... uv run --script smoke_test.py
 ```
+
+## Related
+
+- [[../README|Chaperone]]
+- [[../chaperone|Chaperone — working draft]]
+- [[../../journey/_index|Chaperone — hackathon journey]]

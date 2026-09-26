@@ -6,6 +6,8 @@ title: "Chaperone Hackathon Journey — Index"
 
 A running record of building [Chaperone](../README.md) for the AWS Zero to Shipped Hackathon. It records the moments, the decisions and the reasoning behind them, the hands-on console work, and how Claude Code on the `hermes` VPS used the AWS MCP Server to build it.
 
+> **Status:** Days 0–1 are published. The code in this folder is refreshed daily; the journey for the remaining days is updated once, at submission.
+
 ## How this folder is kept
 
 - **One day file per working day** (`YYYY-MM-DD-dayN.md`): a timestamped timeline of what happened, with the exact commands or MCP scripts, what was surprising, and a **Video beat** note on how to show it on screen.
