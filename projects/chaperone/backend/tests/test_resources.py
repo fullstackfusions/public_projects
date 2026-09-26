@@ -18,7 +18,7 @@ def refs_of(event):
     ("CreateDistributionWithTags", "AWS::CloudFront::Distribution", "EDFDVBD6EXAMPLE"),
     ("CreateOriginAccessControl", "AWS::CloudFront::OriginAccessControl", "EDBG9D9LUL0Z3"),
     ("RequestCertificate", "AWS::CertificateManager::Certificate",
-     "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818"),
+     "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555"),
 ])
 def test_day0_creates(day0, name, rtype, rid):
     (e,) = by_name(day0, name)

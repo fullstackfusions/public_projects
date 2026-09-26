@@ -11,14 +11,14 @@ from handlers import api
 
 ACCOUNT = "444455556666"
 ROLE = "role/AWSReservedSSO_ChaperoneAgent_0123456789abcdef/chaperone-agent"
-IDENTITY = "712b6570-3071-7055-63d9-57ad4abbe08e"
+IDENTITY = "90676543-21a0-70b1-c2d3-e4f5a6b7c8d9"
 
 
 def _item(**kw):
     base = {"kind": "API", "PK": f"ACTOR#{ROLE}", "SK": "t#API#e1", "event_id": "e1", "time": "2026-09-25T15:50:05Z",
             "actor": ROLE, "actor_arn": f"arn:aws:sts::{ACCOUNT}:assumed-role/{ROLE[5:]}", "service": "iam",
             "action": "PutRolePolicy", "risk": "identity_escalation", "reasons": ["iam:PutRolePolicy grants"],
-            "request_id": "57d01808-f45b-4333-bfdc-099b9d01db6d", "on_behalf_of": IDENTITY, "account": ACCOUNT,
+            "request_id": "0f1e2d3c-4b5a-4968-8776-655443322110", "on_behalf_of": IDENTITY, "account": ACCOUNT,
             "via": "terraform", "region": "us-east-1", "user_agent": "Terraform/1.16.4 aws-sdk-go-v2/1.41.5",
             "params": json.dumps({"roleName": "chaperone-forwarder",
                                   "policyDocument": f"arn:aws:events:us-east-1:{ACCOUNT}:event-bus/default"})}
@@ -29,14 +29,14 @@ def test_mask_removes_every_identifier():
     token = "IQoJb3JpZ2luX2VjE" + "A" * 300
     issuer = base64.b64encode(f'{{"a":"https://portal.sso.us-east-2.amazonaws.com/saml/{ACCOUNT}"}}'.encode()).decode()
     body = [_item(), {"note": f"from 198.51.100.7 and 2600:1f18:abcd:1200::17 key ASIAQWERTYUIOPASDFGH "
-                              f"token {token} issuer {issuer} mail mihir@fullstackfusions.com "
-                              f"portal d-0000000000 dist EDFDVBD6EXAMPLE "
-                              f"url https://<function-url-id>.lambda-url.us-east-1.on.aws/ "
+                              f"token {token} issuer {issuer} mail someone@example.org "
+                              f"portal d-1234567890 dist E2ABCDEFGHIJKL "
+                              f"url https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.us-east-1.on.aws/ "
                               f"user {IDENTITY}"}]
     out = public.mask(body, ACCOUNT)
     for leak in (ACCOUNT, "0123456789abcdef", IDENTITY, "198.51.100.7", "2600:1f18", "ASIAQWERTYUIOPASDFGH",
-                 token[:40], "mihir@", "d-0000000000", "EDFDVBD6EXAMPLE", "<function-url-id>",
-                 "57d01808-f45b"):
+                 token[:40], "someone@", "d-1234567890", "E2ABCDEFGHIJKL", "abcdefghijklmnopqrstuvwxyz012345",
+                 "0f1e2d3c-4b5a"):
         assert leak not in out, leak
     assert not any(c in out for c in public._base64_cores(ACCOUNT))
     # still useful: the story survives the masking

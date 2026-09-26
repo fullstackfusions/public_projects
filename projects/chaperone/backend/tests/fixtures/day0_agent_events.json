@@ -3860,7 +3860,7 @@
    ]
   },
   "responseElements": {
-   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818"
+   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555"
   },
   "requestID": "ea54dbeb-798d-4bef-8a47-50ef7c88aef5",
   "eventID": "34b267a4-800a-4d6d-a228-a7dd4fa9f308",
@@ -3973,7 +3973,7 @@
   "sourceIPAddress": "aws-mcp.amazonaws.com",
   "userAgent": "aws-mcp.amazonaws.com",
   "requestParameters": {
-   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818"
+   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555"
   },
   "responseElements": null,
   "requestID": "ed4b54cf-54f1-4e08-a8c6-a1eab35854fe",
@@ -4164,7 +4164,7 @@
   "sourceIPAddress": "aws-mcp.amazonaws.com",
   "userAgent": "aws-mcp.amazonaws.com",
   "requestParameters": {
-   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818"
+   "certificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555"
   },
   "responseElements": null,
   "requestID": "7855da75-ba5a-4950-8534-fcfec4d91c69",
@@ -4398,16 +4398,16 @@
    ],
    "constraints": {
     "encryptionContextEquals": {
-     "aws:acm:arn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818",
+     "aws:acm:arn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555",
      "aws:cloudfront:arn": "arn:aws:cloudfront::111122223333:distribution/EDFDVBD6EXAMPLE"
     }
    },
    "granteePrincipal": "cloudfront.amazonaws.com",
-   "keyId": "2f79c4d2-540f-4af9-98d4-79c4ab497129"
+   "keyId": "66666666-7777-4888-8999-aaaaaaaaaaaa"
   },
   "responseElements": {
    "grantId": "6a89e04ba832bd0fb5e68ea1fa7f770f946b9abbac274b450becc778c7048e7d",
-   "keyId": "arn:aws:kms:us-east-1:111122223333:key/2f79c4d2-540f-4af9-98d4-79c4ab497129"
+   "keyId": "arn:aws:kms:us-east-1:111122223333:key/66666666-7777-4888-8999-aaaaaaaaaaaa"
   },
   "requestID": "fd169904-fae6-416c-ac19-ee705bf1b75c",
   "eventID": "7632ab12-11aa-4d8f-9034-b1bb79756d7b",
@@ -4416,7 +4416,7 @@
    {
     "accountId": "111122223333",
     "type": "AWS::KMS::Key",
-    "ARN": "arn:aws:kms:us-east-1:111122223333:key/2f79c4d2-540f-4af9-98d4-79c4ab497129"
+    "ARN": "arn:aws:kms:us-east-1:111122223333:key/66666666-7777-4888-8999-aaaaaaaaaaaa"
    }
   ],
   "eventType": "AwsApiCall",
@@ -4468,7 +4468,7 @@
    {
     "accountId": "111122223333",
     "type": "AWS::KMS::Key",
-    "ARN": "arn:aws:kms:us-east-1:111122223333:key/2f79c4d2-540f-4af9-98d4-79c4ab497129"
+    "ARN": "arn:aws:kms:us-east-1:111122223333:key/66666666-7777-4888-8999-aaaaaaaaaaaa"
    }
   ],
   "eventType": "AwsApiCall",
@@ -4564,7 +4564,7 @@
     "viewerCertificate": {
      "minimumProtocolVersion": "TLSv1.2_2021",
      "cloudFrontDefaultCertificate": false,
-     "aCMCertificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818",
+     "aCMCertificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555",
      "sSLSupportMethod": "sni-only"
     },
     "restrictions": {
@@ -4682,10 +4682,10 @@
      "viewerCertificate": {
       "minimumProtocolVersion": "TLSv1.2_2021",
       "cloudFrontDefaultCertificate": false,
-      "aCMCertificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818",
+      "aCMCertificateArn": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555",
       "sSLSupportMethod": "sni-only",
       "certificateSource": "acm",
-      "certificate": "arn:aws:acm:us-east-1:111122223333:certificate/eb5f6751-2b3d-4807-a5d0-3b38b7b50818"
+      "certificate": "arn:aws:acm:us-east-1:111122223333:certificate/11111111-2222-4333-8444-555555555555"
      },
      "restrictions": {
       "geoRestriction": {

@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/* Palette "Black Box" (chaperone.md, measured 2026-09-25). Status colours sit outside the
+   palette and are only ever used as text on bg / surface-1 / surface-2. */
+@theme {
+  --color-bg: #0e151d;
+  --color-surface-1: #131b23;
+  --color-surface-2: #212f3e;
+  --color-surface-3: #2f4358;
+  --color-text: #d6e2ee;
+  --color-text-strong: #eff3f8;
+  --color-primary: #bacadb;
+  --color-muted: #9db4cc;
+  --color-subtle: #94a4b5;
+  --color-line: #62809f;
+
+  --color-risk-read: #8fa3b8;
+  --color-risk-write: #6fb3e0;
+  --color-risk-destructive: #f07a6e;
+  --color-risk-escalation: #e8b45a;
+  --color-risk-public: #d98bd9;
+  --color-risk-tamper: #ff5c5c;
+  --color-ok: #5cc8a0;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
