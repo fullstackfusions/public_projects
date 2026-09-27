@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react'
 import { useSessions } from '../lib/api'
 import { link, sessionHref } from '../lib/nav'
+import AgentReview from '../components/AgentReview'
 
 const REPO = 'https://github.com/fullstackfusions/public_projects/tree/master/projects/chaperone'
 
@@ -86,7 +87,7 @@ export default function Judges() {
           </p>
         </Section>
 
-        <Section title="The agent reviews itself">
+        <Section title="The agent reviews itself" wide>
           <p>
             The main way to use Chaperone isn't this site: it's an MCP server in the developer's own agent. It has five
             tools: <code className="font-mono">list_sessions</code>,{' '}
@@ -97,6 +98,7 @@ export default function Judges() {
             this page; the repository has the setup steps. It works with any MCP-capable agent; we have run it with
             Claude Code.
           </p>
+          <AgentReview />
         </Section>
 
         <Section title="How it's built" wide>

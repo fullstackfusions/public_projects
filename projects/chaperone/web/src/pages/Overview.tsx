@@ -2,6 +2,7 @@ import { ArrowRight, Bot, User } from 'lucide-react'
 import { useSessions, type Session } from '../lib/api'
 import { actorName, duration, when } from '../lib/format'
 import { link, sessionHref } from '../lib/nav'
+import AgentReview from '../components/AgentReview'
 import { RISK_ORDER, RiskBadge, riskOf } from '../lib/risk'
 
 export default function Overview() {
@@ -39,6 +40,11 @@ export default function Overview() {
         >
           Judging this entry? Take the 3-minute tour <ArrowRight size={15} />
         </a>
+      </section>
+
+      <section aria-label="The agent reviews itself">
+        <h2 className="mb-3 text-lg font-semibold text-text-strong">The agent asks Chaperone about its own work</h2>
+        <AgentReview />
       </section>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Headline numbers">
