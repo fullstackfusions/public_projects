@@ -98,6 +98,19 @@ resource "aws_iam_role_policy" "access_analyzer" {
 
 # --- API function --------------------------------------------------------------------------
 
+locals {
+  # Session explanations (D-029): written once per session through the private API
+  # (generate=1), read from the table by everyone else. EXPLAIN_MODEL_ID picks one of these.
+  explain_model_id = "us.anthropic.claude-sonnet-4-6"
+  # A US inference profile routes to the base model in any US region: allow the profile
+  # and the base model it calls. gpt-oss-120b is the fallback that needs no use-case form.
+  explain_model_arns = [
+    "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.me.account_id}:inference-profile/us.anthropic.claude-sonnet-4-6",
+    "arn:aws:bedrock:us-*::foundation-model/anthropic.claude-sonnet-4-6",
+    "arn:aws:bedrock:us-east-1::foundation-model/openai.gpt-oss-120b-1:0",
+  ]
+}
+
 resource "aws_iam_role" "api" {
   name               = "${local.name}-api"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
@@ -107,7 +120,7 @@ resource "aws_iam_role" "api" {
 data "aws_iam_policy_document" "api" {
   statement {
     sid       = "ReadEvents"
-    actions   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:PutItem"]
+    actions   = ["dynamodb:Query", "dynamodb:GetItem", "dynamodb:BatchGetItem", "dynamodb:PutItem"]
     resources = [aws_dynamodb_table.events.arn]
   }
   statement {
@@ -131,6 +144,11 @@ data "aws_iam_policy_document" "api" {
       variable = "iam:PassedToService"
       values   = ["access-analyzer.amazonaws.com"]
     }
+  }
+  statement {
+    sid       = "ExplainSessions"
+    actions   = ["bedrock:InvokeModel"]
+    resources = local.explain_model_arns
   }
   statement {
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
@@ -159,7 +177,7 @@ resource "aws_lambda_function" "api" {
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   memory_size      = 512
-  timeout          = 30
+  timeout          = 60 # generate=1 waits on one Bedrock call; public reads take well under a second
   # The public site can't take more than this (D-031); edge caching absorbs repeats.
   reserved_concurrent_executions = 10
   environment {
@@ -167,6 +185,7 @@ resource "aws_lambda_function" "api" {
       ACCOUNT_ID               = data.aws_caller_identity.me.account_id
       TRAIL_ARN                = aws_cloudtrail.main.arn
       ACCESS_ANALYZER_ROLE_ARN = aws_iam_role.access_analyzer.arn
+      EXPLAIN_MODEL_ID         = local.explain_model_id
     })
   }
   depends_on = [aws_cloudwatch_log_group.api, aws_iam_role_policy.api]
