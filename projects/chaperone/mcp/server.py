@@ -12,6 +12,8 @@ session: an agent can review its own AWS work before it says it's done.
     CHAPERONE_API_URL   the API's function URL (terraform output api_url)
     AWS_PROFILE         optional; any credentials that can invoke the URL
     AWS_REGION          the API's region (default us-east-1)
+    CHAPERONE_MASK_ACCOUNT  optional: an account ID; answers are then masked like the public
+                        site (account, role suffixes, identity IDs, IPs), for screen recordings
 
 Run: uv run --script server.py
 """
@@ -34,6 +36,15 @@ from mcp_types import ToolAnnotations
 
 API_URL = os.environ.get("CHAPERONE_API_URL", "").rstrip("/")
 REGION = os.environ.get("AWS_REGION", "us-east-1")
+MASK_ACCOUNT = os.environ.get("CHAPERONE_MASK_ACCOUNT", "")
+
+
+def _masked(body):
+    """The public view's masking (D-031), applied here, for demos: `id=me` needs the private path."""
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend"))
+    from chaperone import public
+    return json.loads(public.mask(body, MASK_ACCOUNT))
 
 mcp = MCPServer("chaperone", instructions=(
     "Chaperone records every AWS API call made by AI agents and people in this AWS account "
@@ -61,7 +72,8 @@ def _get(path: str, **params) -> dict | list:
         raise ToolError(f"AWS credentials: {e}. For SSO profiles run `aws sso login`.") from None
     try:
         with urllib.request.urlopen(urllib.request.Request(url, headers=dict(req.headers)), timeout=60) as r:
-            return json.loads(r.read())
+            body = json.loads(r.read())
+            return _masked(body) if MASK_ACCOUNT else body
     except urllib.error.HTTPError as e:
         body = e.read().decode(errors="replace")
         try:

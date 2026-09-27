@@ -109,6 +109,18 @@ def events(actor: str, start: str | None = None, end: str | None = None) -> list
     return _query_all(cond)
 
 
+def get_many(keys: list[dict]) -> list[dict]:
+    """BatchGetItem in chunks of 100, retrying unprocessed keys."""
+    out, name = [], table().name
+    for n in range(0, len(keys), 100):
+        pending = {name: {"Keys": keys[n:n + 100]}}
+        while pending:
+            r = table().meta.client.batch_get_item(RequestItems=pending)
+            out += r["Responses"].get(name, [])
+            pending = r.get("UnprocessedKeys") or None
+    return out
+
+
 def get_cursor(name: str) -> list[str]:
     item = table().get_item(Key={"PK": f"POLLER#{name}", "SK": "CURSOR"}).get("Item")
     return list(item.get("seen", [])) if item else []

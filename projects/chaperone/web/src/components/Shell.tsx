@@ -11,10 +11,18 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             <span className="block text-xs text-subtle">flight recorder for AI agents on AWS</span>
           </span>
         </a>
-        <span className="hidden text-right text-xs text-subtle sm:block">
-          Real sessions from one AWS account, recorded by CloudTrail.
-          <br />
-          Identifiers masked.
+        <span className="flex items-center gap-5">
+          <span className="hidden text-right text-xs text-subtle md:block">
+            Real sessions from one AWS account, recorded by CloudTrail.
+            <br />
+            Identifiers masked.
+          </span>
+          <a
+            {...link('/judges')}
+            className="rounded-lg bg-surface-1 px-3 py-1.5 text-sm font-medium text-primary hover:bg-surface-2"
+          >
+            For judges
+          </a>
         </span>
       </header>
       <main className="flex-1">{children}</main>

@@ -19,6 +19,19 @@ export interface Session {
   risk: Risk
   reasons: string[]
   risk_counts: Partial<Record<Risk, number>>
+  headline?: string
+}
+
+export interface Explanation {
+  session_id: string
+  status: 'READY' | 'STALE' | 'NOT_GENERATED'
+  model?: string
+  generated_at?: string
+  headline?: string
+  summary?: string
+  moments?: { time: string; text: string }[]
+  risk?: string
+  access?: string
 }
 
 export interface Mark {
@@ -95,5 +108,12 @@ export const useLeastPrivilege = (id: string) =>
   useQuery({
     queryKey: ['least-privilege', id],
     queryFn: () => get<LeastPrivilege>('least-privilege', { id }),
+    staleTime: 5 * minutes,
+  })
+
+export const useExplanation = (id: string) =>
+  useQuery({
+    queryKey: ['explain', id],
+    queryFn: () => get<Explanation>('explain', { id }),
     staleTime: 5 * minutes,
   })

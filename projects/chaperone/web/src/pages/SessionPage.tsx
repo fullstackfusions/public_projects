@@ -2,18 +2,20 @@ import { ArrowLeft, Bot, User } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import EventDrawer from '../components/EventDrawer'
+import Explanation from '../components/Explanation'
 import Findings from '../components/Findings'
 import FlightPath, { place, type Placed } from '../components/FlightPath'
 import LeastPrivilege from '../components/LeastPrivilege'
 import { useReplay, useSessions, type Mark, type Replay } from '../lib/api'
 import { actorName, duration, t, when } from '../lib/format'
-import { link } from '../lib/nav'
+import { cameFrom, link } from '../lib/nav'
 import { RISK_ORDER, RiskBadge } from '../lib/risk'
 
 export default function SessionPage({ id }: { id: string }) {
   const q = useReplay(id)
   const all = useSessions()
   const [selected, setSelected] = useState<Placed | undefined>()
+  const [back] = useState(() => (cameFrom()?.replace(/\/$/, '') === '/judges' ? { to: '/judges', label: 'Back to the tour' } : { to: '/', label: 'All sessions' }))
 
   // People in the console while the agent worked: their own lane (chaperone.md, screen 2).
   const overlapping = useMemo(() => {
@@ -47,8 +49,8 @@ export default function SessionPage({ id }: { id: string }) {
 
   return (
     <div className="space-y-10">
-      <a {...link('/')} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-        <ArrowLeft size={15} /> All sessions
+      <a {...link(back.to)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+        <ArrowLeft size={15} /> {back.label}
       </a>
 
       <section className="flex flex-wrap items-start justify-between gap-6">
@@ -77,6 +79,8 @@ export default function SessionPage({ id }: { id: string }) {
           <Num label="Failed" n={s.errors} />
         </dl>
       </section>
+
+      <Explanation sessionId={id} />
 
       <section aria-labelledby="fp">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
