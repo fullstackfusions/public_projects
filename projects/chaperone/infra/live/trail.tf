@@ -24,6 +24,24 @@ resource "aws_s3_bucket_public_access_block" "trail" {
   restrict_public_buckets = true
 }
 
+# Log files are the evidence behind every session: keep a year (the table keeps 90 days,
+# and Access Analyzer reads at most 90 days back), then let them go.
+resource "aws_s3_bucket_lifecycle_configuration" "trail" {
+  provider = aws.use2
+  bucket   = aws_s3_bucket.trail.id
+  rule {
+    id     = "expire-after-a-year"
+    status = "Enabled"
+    filter {}
+    expiration {
+      days = 365
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+}
+
 locals {
   # Built by name, not from aws_cloudtrail.main.arn: the trail needs this policy
   # before it can be created, so a reference would be a cycle.

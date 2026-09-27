@@ -4,7 +4,7 @@ A flight recorder for AI coding agents in an AWS account. Coding agents such as 
 
 Built for the AWS Zero to Shipped Hackathon (Sep–Oct 2026), by a coding agent, in the AWS account it records.
 
-**Live demo:** https://chaperone.fullstackfusions.com. As of Day 1 (Sep 25) it serves the hello-world page the agent deployed on Day 0; the session-replay console is being built next. The pipeline, the API and the MCP server below are live.
+**Live console:** https://chaperone.fullstackfusions.com shows real sessions from the build account, with identifiers masked. Judging this entry? Start with the 3-minute tour at https://chaperone.fullstackfusions.com/judges.
 
 ## What it shows
 
@@ -13,7 +13,8 @@ Built for the AWS Zero to Shipped Hackathon (Sep–Oct 2026), by a coding agent,
 - **What the session left running:** resources created and not deleted, confirmed through the **Cloud Control API**, with idle cost per month from the **AWS Price List API**. Resources the session created and cleaned up, or pre-existing ones it deleted, are listed separately.
 - **Guardrails as IAM denies**, one per risky class the session showed. They're scoped to the agent's identity and to the MCP channel (`aws:ViaAWSMCPService`), exempt what the agent itself created, and are validated with **IAM Access Analyzer `ValidatePolicy`** (0 findings, as identity policy and as SCP).
 - **Least privilege compared with IAM Access Analyzer's generated policy.** Chaperone's preview is instant; Access Analyzer took 3 min 27 s on the Day 1 build session. 72 of 75 actions matched. Access Analyzer missed `logs:FilterLogEvents` (18 real calls). Both tools miss `iam:PassRole`, which Chaperone recovers from the request parameters.
-- **An MCP server**, so an agent can review its own AWS work before it says it's done: `risky_calls("me")` returns the calls from the caller's own latest session.
+- **An MCP server**, so an agent can review its own AWS work before it says it's done: `risky_calls("me")` returns the calls from the caller's own latest session. It works with any MCP-capable agent; we run it with Claude Code.
+- **A plain-English explanation per session**, written once by **Amazon Bedrock** from the same facts the MCP server returns, and stored. Visitors never call a model.
 
 On Day 1, a coverage check against CloudTrail across all 17 regions matched every agent event: 651 of 651.
 
@@ -21,25 +22,28 @@ On Day 1, a coverage check against CloudTrail across all 17 regions matched ever
 
 ![Target architecture (phase 5)](journey/phase5_architecture.png)
 
-The diagram is the target design. Built and running as of Day 1:
+The diagram is the target design. Built and running as of Day 3:
 
 - a multi-region CloudTrail trail;
 - EventBridge in us-east-1, with forwarding rules from the 16 other enabled regions;
 - a one-minute poller that reads MCP tool calls and sign-ins through `LookupEvents` and reconciles each agent's activity;
 - the ingest Lambda, with its rules, writing to DynamoDB (on-demand, capped at 100 units/s);
 - the API Lambda (function URL, IAM auth);
-- the MCP server.
+- the MCP server;
+- the React console on S3 and CloudFront, with the overview and `/judges` prerendered;
+- session explanations: one Bedrock call per session, started only through the private API and stored.
 
-Still to come: the React console, the chat, and the Bedrock summaries. Full design, data model and cost: [docs/architecture.md](docs/architecture.md). How the design grew, phase by phase: [journey/architecture-phases.md](journey/architecture-phases.md).
+How it fits together, and why: [ARCHITECTURE.md](ARCHITECTURE.md). Full design, data model and cost: [docs/architecture.md](docs/architecture.md). How the design grew, phase by phase: [journey/architecture-phases.md](journey/architecture-phases.md).
 
-**No model call per visitor.** The MCP server runs inside your own agent, with your own model, and its tools call no model. On the live site, session summaries and suggested answers are computed once and stored, so visitors' clicks never call a model.
+**No model call per visitor.** The MCP server runs inside your own agent, with your own model, and its tools call no model. On the live site, each session's explanation is written once by Amazon Bedrock and stored, so visitors' clicks never call a model.
 
 ## Folders
 
 | Folder | Contents |
 |---|---|
-| [`backend/`](backend/) | Python 3.13: ingest, poller and API handlers, attribution, risk rules, sessions, review answers, 103 tests on real recorded CloudTrail events (sanitized) |
+| [`backend/`](backend/) | Python 3.13: ingest, poller and API handlers, attribution, risk rules, sessions, review answers, Bedrock explanations, 116 tests on real recorded CloudTrail events (sanitized) |
 | [`mcp/`](mcp/) | The MCP server (stdio, five tools) and an end-to-end smoke test |
+| [`web/`](web/) | The console: React, Vite and Tailwind, with the overview and `/judges` prerendered at deploy time |
 | [`infra/`](infra/) | Terraform: `bootstrap/` (state bucket) and `live/` (trail, pipeline, API, regions, web) |
 | [`design/`](design/) | Palette generator with measured WCAG contrast |
 | [`docs/`](docs/) | [Architecture](docs/architecture.md) |
@@ -80,11 +84,13 @@ Notes:
 cd backend && python -m pytest
 ```
 
-Needs `pytest` and `boto3`. The tests make no AWS calls: they run on real events from the build account, recorded and sanitized (account `111122223333`, documentation IPs, session tokens redacted) in [`backend/tests/fixtures/`](backend/tests/fixtures/).
+Needs `pytest` and `boto3`; 116 tests. The tests make no AWS calls: they run on real events from the build account, recorded and sanitized (account `111122223333`, documentation IPs, session tokens redacted) in [`backend/tests/fixtures/`](backend/tests/fixtures/).
 
 ## MCP server
 
-Install and tool list: [mcp/README.md](mcp/README.md). In short: `claude mcp add chaperone` with `CHAPERONE_API_URL` (the `api_url` output) and an AWS profile allowed to call `lambda:InvokeFunctionUrl` on the API function. Kiro, Amazon Q Developer and Cursor take the same command and environment.
+Install and tool list: [mcp/README.md](mcp/README.md). In short: `claude mcp add chaperone` with `CHAPERONE_API_URL` (the `api_url` output) and an AWS profile allowed to call `lambda:InvokeFunctionUrl` on the API function. It works with any MCP-capable agent; we run it with Claude Code.
+
+For demo recordings, set `CHAPERONE_MASK_ACCOUNT=<account ID>` and the server masks its answers the way the public site does (see [mcp/README.md](mcp/README.md#recording-a-demo)).
 
 ## Built with a coding agent
 

@@ -7,6 +7,7 @@ import pytest
 
 from chaperone import model, public, query
 from chaperone.sessions import sessionize
+from chaperone import explain
 from handlers import api
 
 ACCOUNT = "444455556666"
@@ -82,6 +83,7 @@ def fake_store(monkeypatch):
         return {"session_id": sid, "actor": ROLE, "timeline": [_item()]}
     monkeypatch.setattr(query, "session", session)
     monkeypatch.setattr(query, "start_access_analyzer", lambda sid: pytest.fail("public view started a job"))
+    monkeypatch.setattr(explain, "generate", lambda sid: pytest.fail("public view called a model"))
     return seen
 
 
@@ -90,6 +92,11 @@ def test_public_view_refuses_me_and_jobs(fake_store):
     assert api.handler(_event("/api/replay"), None)["statusCode"] == 403
     assert api.handler(_event("/api/least-privilege", id=f"{ROLE}@x", start="1"), None)["statusCode"] == 403
     assert api.handler(_event("/api/session", id=f"{ROLE}@x"), None)["statusCode"] == 404  # full timeline: private
+    assert api.handler(_event("/api/explain", id=f"{ROLE}@x", generate="1"), None)["statusCode"] == 403
+
+
+def test_unknown_route_is_404_even_without_a_session_id(fake_store):
+    assert api.handler(_event("/api/nope"), None)["statusCode"] == 404
 
 
 def test_public_replay_unmasks_the_id_and_masks_the_answer(fake_store):

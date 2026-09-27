@@ -25,7 +25,11 @@ claude mcp add chaperone \
   -- uv run --quiet --script /path/to/chaperone/mcp/server.py
 ```
 
-`CHAPERONE_API_URL` is `terraform output api_url` in `infra/live`. Kiro, Amazon Q Developer and Cursor take the same command and environment in their MCP config.
+`CHAPERONE_API_URL` is `terraform output api_url` in `infra/live`. It's a standard stdio MCP server, so any MCP-capable agent can run it with the same command and environment; we have run it with Claude Code.
+
+## Recording a demo
+
+Set `CHAPERONE_MASK_ACCOUNT=<account ID>` in the server's environment and its answers are masked the way the public site masks them (account ID, role suffixes, identity IDs, IP addresses). The public view itself can't be used for this, because it refuses session `"me"`.
 
 ## Check it
 

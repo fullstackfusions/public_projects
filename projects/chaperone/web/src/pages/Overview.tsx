@@ -1,4 +1,4 @@
-import { Bot, User } from 'lucide-react'
+import { ArrowRight, Bot, User } from 'lucide-react'
 import { useSessions, type Session } from '../lib/api'
 import { actorName, duration, when } from '../lib/format'
 import { link, sessionHref } from '../lib/nav'
@@ -15,6 +15,8 @@ export default function Overview() {
   const agentCalls = agents.reduce((n, s) => n + s.api_calls, 0)
   const risky = sessions.reduce((n, s) => n + Object.entries(s.risk_counts).filter(([r]) => riskOf(r).severity >= 2).reduce((a, [, c]) => a + (c ?? 0), 0), 0)
   const worst = [...agents].sort((a, b) => riskOf(b.risk).severity - riskOf(a.risk).severity)[0]
+  // Where a first-time visitor should start: the agent session with the most MCP tool calls.
+  const start = [...agents].sort((a, b) => b.tool_calls - a.tool_calls)[0]
 
   return (
     <div className="space-y-10">
@@ -26,6 +28,17 @@ export default function Overview() {
           Every AWS call an AI coding agent makes, from CloudTrail: grouped into sessions, split from what people did, checked
           against risk rules, and turned into the permissions it actually needed.
         </p>
+        <p className="mt-3 text-sm text-subtle">
+          Every session below is real, recorded by CloudTrail: Claude Code building Chaperone through the AWS MCP
+          Server, and the person working beside it. Identifiers are masked, so the account shows as{' '}
+          <span className="font-mono">111122223333</span>, AWS's documentation placeholder.
+        </p>
+        <a
+          {...link('/judges')}
+          className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2"
+        >
+          Judging this entry? Take the 3-minute tour <ArrowRight size={15} />
+        </a>
       </section>
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Headline numbers">
@@ -43,7 +56,7 @@ export default function Overview() {
         <h2 className="mb-3 text-lg font-semibold text-text-strong">Sessions</h2>
         <ul className="space-y-2">
           {sessions.map((s) => (
-            <SessionRow key={s.session_id} s={s} />
+            <SessionRow key={s.session_id} s={s} start={s === start} />
           ))}
         </ul>
       </section>
@@ -61,7 +74,7 @@ function Stat({ label, value, note }: { label: string; value: number; note: stri
   )
 }
 
-function SessionRow({ s }: { s: Session }) {
+function SessionRow({ s, start }: { s: Session; start: boolean }) {
   const who = actorName(s.actor)
   const total = Object.values(s.risk_counts).reduce((a, b) => a + (b ?? 0), 0) || 1
   const Icon = s.agent ? Bot : User
@@ -79,6 +92,11 @@ function SessionRow({ s }: { s: Session }) {
           <span className="block truncate text-sm text-subtle">
             {s.agent ? 'AI agent' : 'Person'} · {who.detail}
           </span>
+          {start && (
+            <span className="mt-1 inline-block rounded-md bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
+              Start here
+            </span>
+          )}
         </span>
         {/* risk strip: share of calls in each class */}
         <span className="col-span-2 md:col-span-1">
@@ -93,6 +111,7 @@ function SessionRow({ s }: { s: Session }) {
             {s.api_calls.toLocaleString()} AWS calls
             {s.tool_calls > 0 && ` · ${s.tool_calls} MCP tool calls`}
           </span>
+          {s.headline && <span className="mt-1 block text-sm text-text">{s.headline}</span>}
         </span>
         <span className="col-start-2 md:col-start-auto">
           <RiskBadge risk={s.risk} />
