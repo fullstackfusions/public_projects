@@ -38,6 +38,8 @@ def sessions(days: int = 7, include_services: bool = False) -> list[dict]:
         for s in sessionize(store.events(a["SK"], since)):
             if s["actor_type"] == "service" and not include_services:
                 continue
+            if not s["api_calls"] and not s["tool_calls"]:
+                continue  # sign-ins only: credentials issued, nothing done with them
             out.append({k: v for k, v in s.items() if k != "timeline"})
     return sorted(out, key=lambda s: s["start"], reverse=True)
 

@@ -73,6 +73,26 @@ def test_chaperone_own_roles_are_skipped():
         model.to_item(forwarder)
 
 
+def test_console_notification_polling_is_skipped():
+    poll = {"eventName": "ListManagedNotificationEvents", "eventTime": "2026-09-28T09:10:56Z", "eventID": "z",
+            "eventSource": "notifications.amazonaws.com",
+            "userIdentity": {"type": "IAMUser", "userName": "admin", "arn": "arn:aws:iam::111122223333:user/admin"}}
+    with pytest.raises(model.Skip):
+        model.to_item(poll)
+
+
+def test_signin_only_sessions_are_not_listed(day0, monkeypatch):
+    from chaperone import query
+    items = items_of(day0)
+    signin = next(i for i in items if i["kind"] == SIGNIN)
+    lone = {**signin, "time": "2020-01-01T00:00:00Z", "SK": "2020-01-01T00:00:00Z#SIGNIN#lone"}
+    monkeypatch.setattr(query.store, "actors", lambda: [{"SK": AGENT}])
+    monkeypatch.setattr(query.store, "events", lambda actor, since: [lone, *items])
+    listed = query.sessions()
+    assert listed and all(s["api_calls"] or s["tool_calls"] for s in listed)
+    assert not any(s["start"] == lone["time"] for s in listed)
+
+
 def test_lookup_events_string_form_is_accepted(day0):
     import json
     assert model.to_item(json.dumps(day0[0])) == model.to_item(day0[0])

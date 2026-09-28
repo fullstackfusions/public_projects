@@ -41,6 +41,11 @@ _NOT_FOUND = re.compile(r"(^NoSuch|NotFound|^ResourceNotFound)")
 # an hour about Chaperone watching itself.
 _SELF_ROLE = re.compile(r"^chaperone-")
 
+# Background polling the AWS Console makes on its own (e.g. the notification bell), with
+# no relation to what the signed-in person is doing. An open console tab repeats these for
+# hours after the person walked away, each landing as its own zero-signal session.
+_BROWSER_NOISE_EVENTS = {"ListManagedNotificationEvents"}
+
 # Who acted (the identity), independent of how the call was made (`via`).
 HUMAN, AGENT, WORKLOAD, SERVICE = "human", "agent", "workload", "service"
 SERVICE_RETENTION_DAYS = 7  # AWS services acting on their own: high volume, low review value
@@ -180,10 +185,12 @@ def to_item(record: dict | str, resolve_idc=None) -> dict:
     `resolve_idc(user_id) -> actor or None` files Identity Center portal calls under the
     role session that user acts as."""
     r = parse(record)
+    name = r["eventName"]
+    if name in _BROWSER_NOISE_EVENTS:
+        raise Skip(f"browser background poll {name}")
     actor, arn = actor_of(r, resolve_idc)
     time = r["eventTime"]
     event_id = r["eventID"]
-    name = r["eventName"]
     uid = r.get("userIdentity") or {}
 
     if name in CREDENTIAL_EVENTS:
