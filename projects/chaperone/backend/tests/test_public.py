@@ -11,7 +11,7 @@ from chaperone import explain
 from handlers import api
 
 ACCOUNT = "444455556666"
-ROLE = "role/AWSReservedSSO_ChaperoneAgent_0123456789abcdef/chaperone-agent"
+ROLE = "role/AWSReservedSSO_ChaperoneAgent_a1b2c3d4e5f60718/chaperone-agent"
 IDENTITY = "90676543-21a0-70b1-c2d3-e4f5a6b7c8d9"
 
 
@@ -35,7 +35,7 @@ def test_mask_removes_every_identifier():
                               f"url https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.us-east-1.on.aws/ "
                               f"user {IDENTITY}"}]
     out = public.mask(body, ACCOUNT)
-    for leak in (ACCOUNT, "0123456789abcdef", IDENTITY, "198.51.100.7", "2600:1f18", "ASIAQWERTYUIOPASDFGH",
+    for leak in (ACCOUNT, "a1b2c3d4e5f60718", IDENTITY, "198.51.100.7", "2600:1f18", "ASIAQWERTYUIOPASDFGH",
                  token[:40], "someone@", "d-1234567890", "E2ABCDEFGHIJKL", "abcdefghijklmnopqrstuvwxyz012345",
                  "0f1e2d3c-4b5a"):
         assert leak not in out, leak
@@ -104,7 +104,7 @@ def test_public_replay_unmasks_the_id_and_masks_the_answer(fake_store):
     r = api.handler(_event("/api/replay", id=masked), None)
     assert r["statusCode"] == 200 and r["headers"]["cache-control"].startswith("public")
     assert fake_store["sid"] == f"{ROLE}@2026-09-25T15:49:07Z"
-    assert ACCOUNT not in r["body"] and "0123456789abcdef" not in r["body"]
+    assert ACCOUNT not in r["body"] and "a1b2c3d4e5f60718" not in r["body"]
     assert json.loads(r["body"])["marks"][0]["api"] == "iam:PutRolePolicy"
 
 
@@ -112,3 +112,15 @@ def test_private_view_is_unchanged(fake_store):
     r = api.handler(_event("/api/session", public_view=False, id=f"{ROLE}@x"), None)
     assert r["statusCode"] == 200 and r["headers"]["cache-control"] == "no-store"
     assert ACCOUNT in r["body"]
+
+
+def test_settled_sessions_are_cached_longer(fake_store):
+    from datetime import datetime, timedelta, timezone
+    recent = (datetime.now(timezone.utc) - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    for start, age in (("2020-01-01T00:00:00Z", 86400), (recent, 300)):
+        masked = public.mask_text(f"{ROLE}@{start}", ACCOUNT)
+        r = api.handler(_event("/api/replay", id=masked), None)
+        assert r["statusCode"] == 200 and r["headers"]["cache-control"] == f"public, max-age={age}"
+    assert api._max_age("/api/explain", f"{ROLE}@2020-01-01T00:00:00Z") == 3600
+    assert api._max_age("/api/review", f"{ROLE}@2020-01-01T00:00:00Z") == 300  # checks live resources
+    assert api._max_age("/api/sessions", None) == 60

@@ -1,6 +1,6 @@
 import { link } from '../lib/nav'
 
-export default function Shell({ children }: { children: React.ReactNode }) {
+export default function Shell({ children, onJudges = false }: { children: React.ReactNode; onJudges?: boolean }) {
   return (
     <div className="mx-auto flex min-h-screen max-w-[1440px] flex-col px-4 sm:px-8">
       <header className="flex items-center justify-between gap-4 py-5">
@@ -18,10 +18,10 @@ export default function Shell({ children }: { children: React.ReactNode }) {
             Identifiers masked.
           </span>
           <a
-            {...link('/judges')}
+            {...link(onJudges ? '/' : '/judges')}
             className="rounded-lg bg-surface-1 px-3 py-1.5 text-sm font-medium text-primary hover:bg-surface-2"
           >
-            For judges
+            {onJudges ? 'Sessions' : 'For judges'}
           </a>
         </span>
       </header>

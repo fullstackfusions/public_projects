@@ -1,0 +1,45 @@
+# Chaperone
+
+> A flight recorder for AI coding agents in an AWS account. It answers three questions about an agent's work: what did it do, was anything risky, and what access did it actually need. Built for the AWS "Zero to Shipped" hackathon, 2026.
+
+CloudTrail records an AI agent's AWS calls as calls by the developer's identity, and separately records each tool call the agent makes through the AWS MCP Server. Chaperone joins the two on request ID, giving three levels no AWS console shows together: the agent session, each MCP tool call, and every AWS API call that tool call made.
+
+The sessions on the live site are real: the record of Claude Code building Chaperone itself in one AWS account, and of the person working beside it. Identifiers are masked.
+
+## Architecture
+
+1. Capture: CloudTrail (multi-region, management events) records every AWS call. EventBridge forwards API-call events from every enabled region to us-east-1 within seconds. A poller Lambda calls LookupEvents every minute for what EventBridge doesn't carry: AWS MCP Server tool-call events and Identity Center sign-ins.
+2. Process: an ingest Lambda attributes each call to its actor (the agent has its own Identity Center identity, so it is known by identity, not user agent), records the channel (MCP, Terraform, CLI, SDK, console) and classes its risk with fixed rules: read, write, destructive, public exposure, identity escalation or audit tampering. A model never decides risk.
+3. Store: one DynamoDB table, events per actor with a 90-day TTL. Sessions are not stored; they are built at read time (a 30-minute idle gap ends one), and MCP tool calls are joined to their AWS calls by request ID.
+4. Answer: one API Lambda (function URL, AWS_IAM auth) answers every client. It checks what a session left running through Cloud Control, compares the permissions it used with IAM Access Analyzer's generated policy, and has Bedrock write a plain-English summary once per session.
+5. Serve: the MCP server calls the API signed with the developer's credentials (unmasked). The website calls it through CloudFront, which marks requests public; in that view the API masks identifiers and refuses anything that starts work. Scripts and CI can call the API signed.
+
+All infrastructure is in Terraform. Serverless: CloudTrail, EventBridge, Lambda, DynamoDB, CloudFront, S3, Bedrock, IAM Access Analyzer, Cloud Control.
+
+## Ways to use it
+
+- MCP server, for the agent: Claude Code or any MCP-capable agent asks about its own latest session ("me") before it reports back.
+- Web console, for people: the flight path (one lane per channel), every change riskiest first, least privilege, and a plain-English summary per session.
+- HTTP API, for scripts and CI: the same JSON, over a function URL with IAM auth.
+
+## MCP tools
+
+- list_sessions: recent sessions in the account, newest first, each with its riskiest call.
+- what_did_the_agent_do: one session: each MCP tool call with the AWS calls it made, and what it created and deleted.
+- risky_calls: the calls above plain writes, grouped by risk class, with the rule that flagged each one.
+- review_session: what the session left running and its monthly cost, plus IAM deny guardrails validated by IAM Access Analyzer.
+- least_privilege: the permissions the session actually used, as a policy, compared with IAM Access Analyzer's.
+
+## Limits
+
+- Chaperone records and explains. It never blocks, deletes or reverts.
+- Events appear as fast as CloudTrail delivers them: seconds through EventBridge, a few minutes for MCP tool calls.
+- AWS doesn't record the scripts an agent sends through MCP, so Chaperone shows what was called, not the code.
+
+## Links
+
+- [Guide for judges](https://chaperone.fullstackfusions.com/judges)
+- [All recorded sessions](https://chaperone.fullstackfusions.com/)
+- [Architecture diagram](https://chaperone.fullstackfusions.com/architecture.png)
+- [Source code](https://github.com/fullstackfusions/public_projects/tree/master/projects/chaperone)
+- [ARCHITECTURE.md](https://github.com/fullstackfusions/public_projects/blob/master/projects/chaperone/ARCHITECTURE.md)

@@ -20,7 +20,7 @@ export default function Explanation({ sessionId }: { sessionId: string }) {
         <Sparkles size={15} className="text-primary" /> What happened, in plain English
       </h2>
       <p className="mt-2 text-xl font-semibold leading-snug text-text-strong">{e.headline}</p>
-      <p className="mt-3 max-w-4xl leading-relaxed text-text">{e.summary}</p>
+      <p className="mt-3 leading-relaxed text-text">{e.summary}</p>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
         {e.moments && e.moments.length > 0 && (
