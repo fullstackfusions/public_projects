@@ -9,14 +9,14 @@ import Overview from './pages/Overview'
    AI scorer): the overview and /judges, with the session list as it was at deploy time.
    The browser replaces this markup when the app starts (main.tsx seeds the same data). */
 export function render(sessions: Session[]): { home: string; judges: string } {
-  const page = (node: React.ReactNode) => {
+  const page = (node: React.ReactNode, onJudges = false) => {
     const client = new QueryClient()
     client.setQueryData(['sessions'], sessions)
     return renderToString(
       <QueryClientProvider client={client}>
-        <Shell>{node}</Shell>
+        <Shell onJudges={onJudges}>{node}</Shell>
       </QueryClientProvider>,
     )
   }
-  return { home: page(<Overview />), judges: page(<Judges />) }
+  return { home: page(<Overview />), judges: page(<Judges />, true) }
 }

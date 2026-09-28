@@ -15,7 +15,7 @@ export default function SessionPage({ id }: { id: string }) {
   const q = useReplay(id)
   const all = useSessions()
   const [selected, setSelected] = useState<Placed | undefined>()
-  const [back] = useState(() => (cameFrom()?.replace(/\/$/, '') === '/judges' ? { to: '/judges', label: 'Back to the tour' } : { to: '/', label: 'All sessions' }))
+  const [back] = useState(() => (cameFrom()?.replace(/\/$/, '') === '/judges' ? { to: '/judges', label: 'Back to the judges\' guide' } : { to: '/', label: 'All sessions' }))
 
   // People in the console while the agent worked: their own lane (chaperone.md, screen 2).
   const overlapping = useMemo(() => {

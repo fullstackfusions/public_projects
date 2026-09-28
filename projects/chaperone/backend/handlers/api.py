@@ -21,9 +21,11 @@ masked, `id=me`, `start=1` and `generate=1` are refused, and answers may be cach
 import json
 import logging
 import os
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from chaperone import explain, public, query, store
+from chaperone.model import parse_time
 
 log = logging.getLogger()
 log.setLevel(logging.INFO)
@@ -41,13 +43,28 @@ SESSION_ROUTES = {"/api/session", "/api/replay", "/api/event", "/api/review", "/
                   "/api/risky", "/api/least-privilege", "/api/explain"}
 PUBLIC_DAYS = 60  # the site keeps showing the hackathon's sessions through judging
 PUBLIC_MAX_AGE = {"/api/sessions": 60}  # seconds at the edge; per-session answers get 300
+# A session that started longer ago than this can't grow any more (it is rebuilt from at most
+# query.WINDOW of events, and late CloudTrail deliveries land within minutes).
+SETTLED = query.WINDOW + timedelta(hours=1)
+# Settled answers: built only from recorded events, so they never change...
+SETTLED_MAX_AGE = {"/api/replay": 86400, "/api/event": 86400, "/api/what-happened": 86400, "/api/risky": 86400,
+                   # ...or change only when their owner acts privately (a new explanation or Access Analyzer job).
+                   "/api/explain": 3600, "/api/least-privilege": 3600}
 
 
-def _reply(status, body, public_view=False, path=""):
+def _max_age(path: str, sid: str | None) -> int:
+    if sid and path in SETTLED_MAX_AGE:
+        _, start = query.split_id(sid)
+        if datetime.now(timezone.utc) - parse_time(start) > SETTLED:
+            return SETTLED_MAX_AGE[path]
+    return PUBLIC_MAX_AGE.get(path, 300)
+
+
+def _reply(status, body, public_view=False, path="", sid=None):
     if not public_view:
         return {"statusCode": status, "headers": {"content-type": "application/json", "cache-control": "no-store"},
                 "body": json.dumps(body, default=_json)}
-    age = PUBLIC_MAX_AGE.get(path, 300) if status == 200 else 10
+    age = _max_age(path, sid) if status == 200 else 10
     return {"statusCode": status, "headers": {"content-type": "application/json",
                                               "cache-control": f"public, max-age={age}"},
             "body": public.mask(body, os.environ.get("ACCOUNT_ID", ""), default=_json)}
@@ -74,8 +91,10 @@ def handler(event, _context):
     pub = _is_public(event)
     route = path[path.find("/api/"):] if "/api/" in path else path
 
+    sid = None
+
     def reply(status, body):
-        return _reply(status, body, pub, route)
+        return _reply(status, body, pub, route, sid)
 
     try:
         if route == "/api/sessions":

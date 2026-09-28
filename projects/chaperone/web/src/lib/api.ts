@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type QueryClient } from '@tanstack/react-query'
 
 export type Risk = 'read' | 'write' | 'destructive' | 'public_exposure' | 'identity_escalation' | 'audit_tampering'
 
@@ -93,8 +93,10 @@ const minutes = 60_000
 export const useSessions = () =>
   useQuery({ queryKey: ['sessions'], queryFn: () => get<Session[]>('sessions'), staleTime: minutes })
 
-export const useReplay = (id: string) =>
-  useQuery({ queryKey: ['replay', id], queryFn: () => get<Replay>('replay', { id }), staleTime: 5 * minutes })
+const replayQuery = (id: string) =>
+  ({ queryKey: ['replay', id], queryFn: () => get<Replay>('replay', { id }), staleTime: 5 * minutes })
+
+export const useReplay = (id: string) => useQuery(replayQuery(id))
 
 export const useEvent = (id: string, event: string | undefined) =>
   useQuery({
@@ -104,16 +106,25 @@ export const useEvent = (id: string, event: string | undefined) =>
     staleTime: Infinity,
   })
 
-export const useLeastPrivilege = (id: string) =>
-  useQuery({
-    queryKey: ['least-privilege', id],
-    queryFn: () => get<LeastPrivilege>('least-privilege', { id }),
-    staleTime: 5 * minutes,
-  })
+const leastPrivilegeQuery = (id: string) => ({
+  queryKey: ['least-privilege', id],
+  queryFn: () => get<LeastPrivilege>('least-privilege', { id }),
+  staleTime: 5 * minutes,
+})
 
-export const useExplanation = (id: string) =>
-  useQuery({
-    queryKey: ['explain', id],
-    queryFn: () => get<Explanation>('explain', { id }),
-    staleTime: 5 * minutes,
-  })
+export const useLeastPrivilege = (id: string) => useQuery(leastPrivilegeQuery(id))
+
+const explanationQuery = (id: string) => ({
+  queryKey: ['explain', id],
+  queryFn: () => get<Explanation>('explain', { id }),
+  staleTime: 5 * minutes,
+})
+
+export const useExplanation = (id: string) => useQuery(explanationQuery(id))
+
+/* Start loading a session page's data before the visitor opens it. */
+export function prefetchSession(client: QueryClient, id: string) {
+  void client.prefetchQuery(replayQuery(id))
+  void client.prefetchQuery(explanationQuery(id))
+  void client.prefetchQuery(leastPrivilegeQuery(id))
+}

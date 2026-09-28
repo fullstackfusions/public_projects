@@ -19,3 +19,6 @@ dist/
 *.pem
 # Terraform build output (Lambda zips)
 .build/
+
+# Saved terraform plans (hold resolved values from state)
+infra/live/plan

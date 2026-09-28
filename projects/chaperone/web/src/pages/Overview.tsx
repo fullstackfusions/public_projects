@@ -38,7 +38,7 @@ export default function Overview() {
           {...link('/judges')}
           className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-2"
         >
-          Judging this entry? Take the 3-minute tour <ArrowRight size={15} />
+          Judging this entry? Start with the judges' guide <ArrowRight size={15} />
         </a>
       </section>
 

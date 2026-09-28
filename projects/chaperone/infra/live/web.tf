@@ -7,7 +7,7 @@
 # `id=me` and job starts. A viewer can't drop or change that header (CloudFront overwrites it).
 
 locals {
-  domain        = var.domain
+  domain        = "chaperone.fullstackfusions.com"
   web_origin_id = "s3-chaperone-web"
   api_origin_id = "lambda-chaperone-api"
   api_domain    = trimsuffix(trimprefix(aws_lambda_function_url.api.function_url, "https://"), "/")
@@ -87,7 +87,7 @@ resource "aws_cloudfront_cache_policy" "api" {
   comment     = "Query strings only; TTL from the API's Cache-Control"
   min_ttl     = 0
   default_ttl = 0
-  max_ttl     = 3600
+  max_ttl     = 86400 # settled sessions' answers never change (handlers/api.py SETTLED_MAX_AGE)
   parameters_in_cache_key_and_forwarded_to_origin {
     enable_accept_encoding_brotli = true
     enable_accept_encoding_gzip   = true
