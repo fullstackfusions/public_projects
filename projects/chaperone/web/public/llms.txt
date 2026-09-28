@@ -40,6 +40,7 @@ All infrastructure is in Terraform. Serverless: CloudTrail, EventBridge, Lambda,
 
 - [Guide for judges](https://chaperone.fullstackfusions.com/judges)
 - [All recorded sessions](https://chaperone.fullstackfusions.com/)
+- [Every session as text, with its summary, key moments, risk and access](https://chaperone.fullstackfusions.com/sessions.md)
 - [Architecture diagram](https://chaperone.fullstackfusions.com/architecture.png)
 - [Source code](https://github.com/fullstackfusions/public_projects/tree/master/projects/chaperone)
 - [ARCHITECTURE.md](https://github.com/fullstackfusions/public_projects/blob/master/projects/chaperone/ARCHITECTURE.md)

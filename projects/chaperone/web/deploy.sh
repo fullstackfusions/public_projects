@@ -12,4 +12,4 @@ npx vite build --ssr src/prerender.tsx --outDir dist-ssr --logLevel warn
 node prerender.mjs
 aws s3 sync dist/assets "s3://$BUCKET/assets" --cache-control "public, max-age=31536000, immutable"
 aws s3 sync dist "s3://$BUCKET" --exclude "assets/*" --delete --cache-control "no-cache"
-aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/index.html" "/" "/judges" "/judges/index.html" --query Invalidation.Id --output text
+aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/index.html" "/" "/judges" "/judges/index.html" "/sessions.md" "/llms.txt" "/api/sessions*" "/api/explain*" --query Invalidation.Id --output text

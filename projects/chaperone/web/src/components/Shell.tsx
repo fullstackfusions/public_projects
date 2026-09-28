@@ -28,9 +28,14 @@ export default function Shell({ children, onJudges = false }: { children: React.
       <main className="flex-1">{children}</main>
       <footer className="mt-16 flex flex-wrap justify-between gap-2 border-t border-surface-2 py-6 text-xs text-subtle">
         <span>Built for the AWS Zero to Shipped hackathon, 2026 · FullStackFusions | Mihir Patel</span>
-        <a className="text-primary hover:underline" href="https://github.com/fullstackfusions/public_projects/tree/master/projects/chaperone">
-          Source (PolyForm Noncommercial)
-        </a>
+        <span className="flex gap-4">
+          <a className="text-primary hover:underline" href="/sessions.md">
+            Sessions as text
+          </a>
+          <a className="text-primary hover:underline" href="https://github.com/fullstackfusions/public_projects/tree/master/projects/chaperone">
+            Source (PolyForm Noncommercial)
+          </a>
+        </span>
       </footer>
     </div>
   )
