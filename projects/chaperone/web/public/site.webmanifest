@@ -1,0 +1,12 @@
+{
+  "name": "Chaperone",
+  "short_name": "Chaperone",
+  "description": "A flight recorder for AI coding agents in your AWS account.",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#0E151D",
+  "background_color": "#0E151D",
+  "display": "standalone"
+}

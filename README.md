@@ -138,6 +138,7 @@ No setup needed at the root level. Go caches modules in `$GOPATH/pkg/mod` global
 | [`local_first_reranking_layer`](./projects/local_first_reranking_layer/) | AI / LLM | sentence-transformers, FlashRank, BGE, Ollama | Local-first RAG reranking benchmark: bi-encoder retrieval → CPU cross-encoder rerank (FlashRank/BGE) → compress → qwen3:8b. Giant-scale run cuts 530K → 560 tokens (948×) at 12/12 correct. |
 | [`rust_token_killer`](./projects/rust_token_killer/) | AI / LLM | LangGraph, Python, Ollama | LangGraph demo that benchmarks token savings by compressing shell commands via RTK before sending to a local Qwen2.5 agent — raw vs. compressed mode comparison. |
 | [`sli_slo_observability_pipeline`](./projects/sli_slo_observability_pipeline/) | Observability / SRE | FastAPI, OpenTelemetry, Prometheus, Grafana, Sloth, Alertmanager | Vendor-neutral SLI/SLO pipeline: OTel-instrumented service → Collector → Prometheus, p95/p99 latency + error-rate SLIs, Sloth-generated burn-rate alerting, Grafana dashboards. |
+| [`chaperone`](./projects/chaperone/) | AI Agents / Cloud Security | CloudTrail, EventBridge, Lambda, DynamoDB, IAM Access Analyzer, MCP, Terraform | Flight recorder for AI coding agents in an AWS account: attributes each AWS API call to the agent's MCP tool call, flags risky calls with deterministic rules, and derives guardrails and least privilege. AWS Zero to Shipped Hackathon entry. **Not MIT:** licensed under [PolyForm Noncommercial 1.0.0](./projects/chaperone/LICENSE). |
 
 
 ## ⚠️ Disclaimer
