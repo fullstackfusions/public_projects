@@ -1,0 +1,519 @@
+[
+ {
+  "scenario": "db-pool-exhaustion",
+  "tool": "query_logs",
+  "params": {
+   "service": "payments-api"
+  },
+  "query": "why are payments requests failing",
+  "raw": {
+   "tokens": 18361,
+   "ms_median": 70.1,
+   "evidence_kept": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1731,
+   "ms_median": 1.3,
+   "evidence_kept": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 18361,
+   "ms_median": 7338.0,
+   "evidence_kept": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 1731,
+   "ms_median": 573.5,
+   "evidence_kept": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "QueuePool limit"
+   ]
+  }
+ },
+ {
+  "scenario": "db-pool-exhaustion",
+  "tool": "query_logs",
+  "params": {
+   "service": "checkout-api"
+  },
+  "query": "which upstream is failing",
+  "raw": {
+   "tokens": 18324,
+   "ms_median": 5.6,
+   "evidence_kept": [
+    "upstream payments-api"
+   ],
+   "evidence_in_raw": [
+    "upstream payments-api"
+   ]
+  },
+  "log_fold": {
+   "tokens": 2063,
+   "ms_median": 1.4,
+   "evidence_kept": [
+    "upstream payments-api"
+   ],
+   "evidence_in_raw": [
+    "upstream payments-api"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 18324,
+   "ms_median": 7536.0,
+   "evidence_kept": [
+    "upstream payments-api"
+   ],
+   "evidence_in_raw": [
+    "upstream payments-api"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 2063,
+   "ms_median": 749.0,
+   "evidence_kept": [
+    "upstream payments-api"
+   ],
+   "evidence_in_raw": [
+    "upstream payments-api"
+   ]
+  }
+ },
+ {
+  "scenario": "db-pool-exhaustion",
+  "tool": "search_runbooks",
+  "params": {
+   "q": "remaining connection slots reserved"
+  },
+  "query": "how to diagnose postgres connection exhaustion",
+  "raw": {
+   "tokens": 1802,
+   "ms_median": 15.0,
+   "evidence_kept": [
+    "remaining connection slots",
+    "max_connections"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "max_connections"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1802,
+   "ms_median": 0.4,
+   "evidence_kept": [
+    "remaining connection slots",
+    "max_connections"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "max_connections"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 229,
+   "ms_median": 372.4,
+   "evidence_kept": [
+    "remaining connection slots",
+    "max_connections"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "max_connections"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 229,
+   "ms_median": 475.0,
+   "evidence_kept": [
+    "remaining connection slots",
+    "max_connections"
+   ],
+   "evidence_in_raw": [
+    "remaining connection slots",
+    "max_connections"
+   ]
+  }
+ },
+ {
+  "scenario": "bad-feature-flag",
+  "tool": "query_logs",
+  "params": {
+   "service": "search-api"
+  },
+  "query": "why is search latency high",
+  "raw": {
+   "tokens": 18203,
+   "ms_median": 4.3,
+   "evidence_kept": [
+    "context deadline exceeded"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded"
+   ]
+  },
+  "log_fold": {
+   "tokens": 2058,
+   "ms_median": 1.4,
+   "evidence_kept": [
+    "context deadline exceeded"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 18203,
+   "ms_median": 7372.0,
+   "evidence_kept": [
+    "context deadline exceeded"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 2058,
+   "ms_median": 728.7,
+   "evidence_kept": [
+    "context deadline exceeded"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded"
+   ]
+  }
+ },
+ {
+  "scenario": "bad-feature-flag",
+  "tool": "get_k8s_events",
+  "params": {},
+  "query": "reranker pod failures",
+  "raw": {
+   "tokens": 5700,
+   "ms_median": 1.4,
+   "evidence_kept": [
+    "OOMKilled"
+   ],
+   "evidence_in_raw": [
+    "OOMKilled"
+   ]
+  },
+  "log_fold": {
+   "tokens": 5700,
+   "ms_median": 1.3,
+   "evidence_kept": [
+    "OOMKilled"
+   ],
+   "evidence_in_raw": [
+    "OOMKilled"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 5700,
+   "ms_median": 1426.9,
+   "evidence_kept": [
+    "OOMKilled"
+   ],
+   "evidence_in_raw": [
+    "OOMKilled"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 5700,
+   "ms_median": 1540.8,
+   "evidence_kept": [
+    "OOMKilled"
+   ],
+   "evidence_in_raw": [
+    "OOMKilled"
+   ]
+  }
+ },
+ {
+  "scenario": "bad-feature-flag",
+  "tool": "search_runbooks",
+  "params": {
+   "q": "search latency reranker"
+  },
+  "query": "what causes reranker overload",
+  "raw": {
+   "tokens": 1841,
+   "ms_median": 0.6,
+   "evidence_kept": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1841,
+   "ms_median": 0.4,
+   "evidence_kept": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 187,
+   "ms_median": 603.9,
+   "evidence_kept": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 187,
+   "ms_median": 442.9,
+   "evidence_kept": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ],
+   "evidence_in_raw": [
+    "context deadline exceeded",
+    "OOMKilled",
+    "semantic_rerank"
+   ]
+  }
+ },
+ {
+  "scenario": "red-herring-drift",
+  "tool": "query_logs",
+  "params": {
+   "service": "auth-api"
+  },
+  "query": "why are SSO logins failing",
+  "raw": {
+   "tokens": 17456,
+   "ms_median": 4.6,
+   "evidence_kept": [
+    "no such host"
+   ],
+   "evidence_in_raw": [
+    "no such host"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1883,
+   "ms_median": 1.4,
+   "evidence_kept": [
+    "no such host"
+   ],
+   "evidence_in_raw": [
+    "no such host"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 17456,
+   "ms_median": 6956.8,
+   "evidence_kept": [
+    "no such host"
+   ],
+   "evidence_in_raw": [
+    "no such host"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 1883,
+   "ms_median": 622.4,
+   "evidence_kept": [
+    "no such host"
+   ],
+   "evidence_in_raw": [
+    "no such host"
+   ]
+  }
+ },
+ {
+  "scenario": "red-herring-drift",
+  "tool": "get_k8s_events",
+  "params": {},
+  "query": "recent changes to DNS or auth",
+  "raw": {
+   "tokens": 5812,
+   "ms_median": 1.5,
+   "evidence_kept": [
+    "ConfigMap kube-system/coredns"
+   ],
+   "evidence_in_raw": [
+    "ConfigMap kube-system/coredns"
+   ]
+  },
+  "log_fold": {
+   "tokens": 5812,
+   "ms_median": 1.5,
+   "evidence_kept": [
+    "ConfigMap kube-system/coredns"
+   ],
+   "evidence_in_raw": [
+    "ConfigMap kube-system/coredns"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 5812,
+   "ms_median": 1588.4,
+   "evidence_kept": [
+    "ConfigMap kube-system/coredns"
+   ],
+   "evidence_in_raw": [
+    "ConfigMap kube-system/coredns"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 5812,
+   "ms_median": 366.0,
+   "evidence_kept": [
+    "ConfigMap kube-system/coredns"
+   ],
+   "evidence_in_raw": [
+    "ConfigMap kube-system/coredns"
+   ]
+  }
+ },
+ {
+  "scenario": "log-flood",
+  "tool": "query_logs",
+  "params": {
+   "service": "inventory-consumer",
+   "limit": 2000
+  },
+  "query": "why is consumer lag growing",
+  "raw": {
+   "tokens": 68706,
+   "ms_median": 30.5,
+   "evidence_kept": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ],
+   "evidence_in_raw": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1980,
+   "ms_median": 3.7,
+   "evidence_kept": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ],
+   "evidence_in_raw": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 26402,
+   "ms_median": 15272.0,
+   "evidence_kept": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ],
+   "evidence_in_raw": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 1951,
+   "ms_median": 672.0,
+   "evidence_kept": [
+    "records=5000"
+   ],
+   "evidence_in_raw": [
+    "max.poll.interval.ms",
+    "records=5000"
+   ]
+  }
+ },
+ {
+  "scenario": "log-flood",
+  "tool": "query_logs",
+  "params": {
+   "service": "kafka",
+   "limit": 2000
+  },
+  "query": "consumer group rebalances",
+  "raw": {
+   "tokens": 65418,
+   "ms_median": 28.8,
+   "evidence_kept": [
+    "Preparing to rebalance"
+   ],
+   "evidence_in_raw": [
+    "Preparing to rebalance"
+   ]
+  },
+  "log_fold": {
+   "tokens": 1562,
+   "ms_median": 9.5,
+   "evidence_kept": [
+    "Preparing to rebalance"
+   ],
+   "evidence_in_raw": [
+    "Preparing to rebalance"
+   ]
+  },
+  "sd_compress": {
+   "tokens": 65418,
+   "ms_median": 46135.2,
+   "evidence_kept": [
+    "Preparing to rebalance"
+   ],
+   "evidence_in_raw": [
+    "Preparing to rebalance"
+   ]
+  },
+  "fold+sd_compress": {
+   "tokens": 1562,
+   "ms_median": 571.7,
+   "evidence_kept": [
+    "Preparing to rebalance"
+   ],
+   "evidence_in_raw": [
+    "Preparing to rebalance"
+   ]
+  }
+ }
+]

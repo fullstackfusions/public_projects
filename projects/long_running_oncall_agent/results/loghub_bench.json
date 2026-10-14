@@ -1,0 +1,380 @@
+[
+ {
+  "system": "OpenStack",
+  "lines": 2000,
+  "query": "Which requests or instances failed or produced warnings, and why?",
+  "gt_templates": 43,
+  "raw": {
+   "tokens": 295240,
+   "ms": 0,
+   "abnormal_recall": [
+    2,
+    2
+   ],
+   "template_recall": [
+    43,
+    43
+   ]
+  },
+  "log_fold": {
+   "tokens": 8555,
+   "ms": 8,
+   "abnormal_recall": [
+    2,
+    2
+   ],
+   "template_recall": [
+    43,
+    43
+   ],
+   "fold_groups": 67
+  },
+  "sd_compress": {
+   "tokens": 147985,
+   "ms": 22263,
+   "abnormal_recall": [
+    2,
+    2
+   ],
+   "template_recall": [
+    30,
+    43
+   ],
+   "successful": true,
+   "sd_reported_in": 358016,
+   "sd_reported_out": 149734,
+   "byte_identical": false
+  },
+  "fold+sd_compress": {
+   "tokens": 2584,
+   "ms": 1071,
+   "abnormal_recall": [
+    1,
+    2
+   ],
+   "template_recall": [
+    17,
+    43
+   ],
+   "successful": true,
+   "sd_reported_in": 10332,
+   "sd_reported_out": 2602,
+   "byte_identical": false
+  }
+ },
+ {
+  "system": "HDFS",
+  "lines": 2000,
+  "query": "Are there any block or datanode problems? Which warnings occurred?",
+  "gt_templates": 14,
+  "raw": {
+   "tokens": 96789,
+   "ms": 0,
+   "abnormal_recall": [
+    1,
+    1
+   ],
+   "template_recall": [
+    14,
+    14
+   ]
+  },
+  "log_fold": {
+   "tokens": 1803,
+   "ms": 6,
+   "abnormal_recall": [
+    1,
+    1
+   ],
+   "template_recall": [
+    14,
+    14
+   ],
+   "fold_groups": 16
+  },
+  "sd_compress": {
+   "tokens": 18263,
+   "ms": 9385,
+   "abnormal_recall": [
+    1,
+    1
+   ],
+   "template_recall": [
+    11,
+    14
+   ],
+   "successful": true,
+   "sd_reported_in": 116293,
+   "sd_reported_out": 18247,
+   "byte_identical": false
+  },
+  "fold+sd_compress": {
+   "tokens": 1803,
+   "ms": 1807,
+   "abnormal_recall": [
+    1,
+    1
+   ],
+   "template_recall": [
+    13,
+    14
+   ],
+   "successful": true,
+   "sd_reported_in": 2181,
+   "sd_reported_out": 1804,
+   "byte_identical": false
+  }
+ },
+ {
+  "system": "Hadoop",
+  "lines": 2000,
+  "query": "Why did the MapReduce job fail? Which errors occurred and in which component?",
+  "gt_templates": 114,
+  "raw": {
+   "tokens": 132034,
+   "ms": 0,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    114,
+    114
+   ]
+  },
+  "log_fold": {
+   "tokens": 7931,
+   "ms": 7,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    113,
+    114
+   ],
+   "fold_groups": 121
+  },
+  "sd_compress": {
+   "tokens": 2585,
+   "ms": 12329,
+   "abnormal_recall": [
+    4,
+    12
+   ],
+   "template_recall": [
+    17,
+    114
+   ],
+   "successful": true,
+   "sd_reported_in": 154443,
+   "sd_reported_out": 2556,
+   "byte_identical": false
+  },
+  "fold+sd_compress": {
+   "tokens": 1144,
+   "ms": 1013,
+   "abnormal_recall": [
+    4,
+    12
+   ],
+   "template_recall": [
+    11,
+    114
+   ],
+   "successful": true,
+   "sd_reported_in": 9464,
+   "sd_reported_out": 1137,
+   "byte_identical": false
+  }
+ },
+ {
+  "system": "BGL",
+  "lines": 2000,
+  "query": "Which hardware or kernel failures occurred on the nodes?",
+  "gt_templates": 120,
+  "raw": {
+   "tokens": 143497,
+   "ms": 0,
+   "abnormal_recall": [
+    77,
+    77
+   ],
+   "template_recall": [
+    120,
+    120
+   ]
+  },
+  "log_fold": {
+   "tokens": 12028,
+   "ms": 6,
+   "abnormal_recall": [
+    73,
+    77
+   ],
+   "template_recall": [
+    116,
+    120
+   ],
+   "fold_groups": 141
+  },
+  "sd_compress": {
+   "tokens": 143497,
+   "ms": 1755,
+   "abnormal_recall": [
+    77,
+    77
+   ],
+   "template_recall": [
+    120,
+    120
+   ],
+   "successful": true,
+   "sd_reported_in": 169975,
+   "sd_reported_out": 141636,
+   "byte_identical": true
+  },
+  "fold+sd_compress": {
+   "tokens": 8048,
+   "ms": 1720,
+   "abnormal_recall": [
+    49,
+    77
+   ],
+   "template_recall": [
+    76,
+    120
+   ],
+   "successful": true,
+   "sd_reported_in": 14270,
+   "sd_reported_out": 7947,
+   "byte_identical": false
+  }
+ },
+ {
+  "system": "Apache",
+  "lines": 2000,
+  "query": "What errors is the web server reporting?",
+  "gt_templates": 6,
+  "raw": {
+   "tokens": 65360,
+   "ms": 0,
+   "abnormal_recall": [
+    4,
+    4
+   ],
+   "template_recall": [
+    6,
+    6
+   ]
+  },
+  "log_fold": {
+   "tokens": 468,
+   "ms": 6,
+   "abnormal_recall": [
+    4,
+    4
+   ],
+   "template_recall": [
+    6,
+    6
+   ],
+   "fold_groups": 12
+  },
+  "sd_compress": {
+   "tokens": 65360,
+   "ms": 8765,
+   "abnormal_recall": [
+    4,
+    4
+   ],
+   "template_recall": [
+    6,
+    6
+   ],
+   "successful": true,
+   "sd_reported_in": 77409,
+   "sd_reported_out": 64500,
+   "byte_identical": true
+  },
+  "fold+sd_compress": {
+   "tokens": 468,
+   "ms": 322,
+   "abnormal_recall": [
+    4,
+    4
+   ],
+   "template_recall": [
+    6,
+    6
+   ],
+   "successful": true,
+   "sd_reported_in": 564,
+   "sd_reported_out": 462,
+   "byte_identical": true
+  }
+ },
+ {
+  "system": "Zookeeper",
+  "lines": 2000,
+  "query": "Why are the quorum peers losing connections? Which errors occurred?",
+  "gt_templates": 50,
+  "raw": {
+   "tokens": 108915,
+   "ms": 0,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    50,
+    50
+   ]
+  },
+  "log_fold": {
+   "tokens": 3693,
+   "ms": 6,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    50,
+    50
+   ],
+   "fold_groups": 55
+  },
+  "sd_compress": {
+   "tokens": 108915,
+   "ms": 19311,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    50,
+    50
+   ],
+   "successful": true,
+   "sd_reported_in": 129996,
+   "sd_reported_out": 108318,
+   "byte_identical": true
+  },
+  "fold+sd_compress": {
+   "tokens": 3693,
+   "ms": 736,
+   "abnormal_recall": [
+    12,
+    12
+   ],
+   "template_recall": [
+    49,
+    50
+   ],
+   "successful": true,
+   "sd_reported_in": 4420,
+   "sd_reported_out": 3672,
+   "byte_identical": false
+  }
+ }
+]

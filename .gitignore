@@ -93,3 +93,8 @@ floci_data/
 floci_volume/
 *.s3data
 parked/
+
+# ---------------------------------------------------------------------------
+# Private local notes (testing/cleanup guides): never published
+# ---------------------------------------------------------------------------
+local_docs/

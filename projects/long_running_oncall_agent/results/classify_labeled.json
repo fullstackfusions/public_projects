@@ -1,0 +1,191 @@
+[
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.3888215254567933,
+   "looping": 0.2870689261411634,
+   "drifting": 0.32410954840204337
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.37450264758059415,
+   "looping": 0.29379446551579397,
+   "drifting": 0.33170288690361194
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.3432271134351722,
+   "looping": 0.2692590479497598,
+   "drifting": 0.3875138386150679
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.3004183750689261,
+   "looping": 0.3604001426852899,
+   "drifting": 0.33918148224578404
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.7828476762372814,
+   "looping": 0.06504465591506008,
+   "drifting": 0.15210766784765858
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.4680054497173683,
+   "looping": 0.30604209534921534,
+   "drifting": 0.2259524549334163
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.4410549664175367,
+   "looping": 0.3460042511284002,
+   "drifting": 0.21294078245406312
+  }
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.5630082711327123,
+   "looping": 0.14816741967309524,
+   "drifting": 0.28882430919419244
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.1002189777411756,
+   "looping": 0.5823469188225424,
+   "drifting": 0.3174341034362819
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.08828067630457916,
+   "looping": 0.8335277397981925,
+   "drifting": 0.07819158389722845
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.14976280938460243,
+   "looping": 0.7253995601254251,
+   "drifting": 0.12483763048997247
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.08534971877147779,
+   "looping": 0.8058541689734423,
+   "drifting": 0.1087961122550801
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.45993518942281497,
+   "looping": 0.4328563749256063,
+   "drifting": 0.10720843565157873
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.03599023121616296,
+   "looping": 0.9533160655861758,
+   "drifting": 0.010693703197661249
+  }
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "probs": {
+   "progressing": 0.2805254641603213,
+   "looping": 0.5468312370981876,
+   "drifting": 0.17264329874149104
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.16862742404544917,
+   "looping": 0.32870721086038324,
+   "drifting": 0.5026653650941676
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.3265243826069341,
+   "looping": 0.3265243826069341,
+   "drifting": 0.3469512347861319
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "progressing",
+  "probs": {
+   "progressing": 0.5797940090124545,
+   "looping": 0.17227304211091665,
+   "drifting": 0.24793294887662895
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.2755456146483026,
+   "looping": 0.3512406608267574,
+   "drifting": 0.37321372452494
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.18125066890360259,
+   "looping": 0.17057948445499607,
+   "drifting": 0.6481698466414013
+  }
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "probs": {
+   "progressing": 0.24562442877433938,
+   "looping": 0.24562442877433938,
+   "drifting": 0.5087511424513212
+  }
+ }
+]

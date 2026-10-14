@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-call Agent Console</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --ink: #1b1f24; --muted: #5b6573; --line: #e2e5ea;
+  --accent: #2f6fdb; --ok: #1f8a4c; --warn: #b7791f; --bad: #c53030; --chip: #eef1f5;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1216; --panel: #171b21; --ink: #e6e9ee; --muted: #9aa4b2; --line: #2a313b;
+          --accent: #6ea0ff; --ok: #4cc38a; --warn: #e0a84a; --bad: #f07272; --chip: #222934; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+       font: 14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; }
+header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; gap: 16px;
+         align-items: baseline; flex-wrap: wrap; }
+header h1 { font-size: 16px; margin: 0; }
+header .meta { color: var(--muted); font-size: 12px; }
+main { display: grid; grid-template-columns: 340px 1fr; gap: 16px; padding: 16px 20px; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 12px 16px; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+            margin: 0 0 10px; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+select, button { width: 100%; padding: 7px 8px; border-radius: 6px; border: 1px solid var(--line);
+                 background: var(--bg); color: var(--ink); font: inherit; }
+button { background: var(--accent); color: #fff; border: 0; margin-top: 12px; cursor: pointer; }
+.runs { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow: auto; }
+.runs li { padding: 8px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+.runs li:hover, .runs li.sel { background: var(--chip); border-color: var(--line); }
+.runs .t { font-weight: 600; font-size: 13px; }
+.runs .s { color: var(--muted); font-size: 12px; }
+.chip { display: inline-block; padding: 1px 7px; border-radius: 10px; background: var(--chip);
+        font-size: 11px; font-family: var(--mono); }
+.st-succeeded { color: var(--ok); } .st-failed, .st-budget_exhausted { color: var(--bad); }
+.st-stopped_by_guard { color: var(--warn); } .st-running, .st-queued { color: var(--accent); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1200px) { .grid2 { grid-template-columns: 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line);
+         font-variant-numeric: tabular-nums; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 500; }
+.timeline { max-height: 62vh; overflow: auto; font-size: 12px; }
+.ev { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.ev .k { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.ev .b { font-family: var(--mono); white-space: pre-wrap; word-break: break-word; }
+.ev.guard_nudge .k, .ev.guard_stop .k { color: var(--warn); font-weight: 700; }
+.ev.finished .k { color: var(--ok); font-weight: 700; } .ev.failed .k { color: var(--bad); }
+.ev.resumed .k { color: var(--accent); font-weight: 700; }
+.kv { display: grid; grid-template-columns: 130px 1fr; gap: 4px 10px; font-size: 13px; }
+.kv div:nth-child(odd) { color: var(--muted); }
+svg text { fill: var(--muted); font-size: 10px; }
+.empty { color: var(--muted); padding: 30px; text-align: center; }
+body.full .timeline { max-height: none; overflow: visible; }
+body.wide main { grid-template-columns: 1fr; }
+body.wide main > section:first-child { display: none; }
+body.wide .grid2 { grid-template-columns: 1fr; }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; margin: 4px 0 8px; }
+.legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; margin-right: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>On-call Agent Console</h1>
+  <span class="meta" id="meta"></span>
+</header>
+<main>
+  <section>
+    <div class="panel">
+      <h2>New incident run</h2>
+      <label for="scenario">Scenario</label><select id="scenario"></select>
+      <label for="profile">Middleware profile</label><select id="profile"></select>
+      <button id="go">Page the agent</button>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <h2>Runs</h2>
+      <ul class="runs" id="runs"></ul>
+    </div>
+  </section>
+  <section id="detail"><div class="panel empty">Select or start a run.</div></section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const fmt = (n) => n == null ? "–" : Number(n).toLocaleString();
+let selected = null, source = null;
+// Screenshot-friendly URL params: ?run=<id>&kinds=a,b&order=asc&full=1  |  ?compare=<id>,<id>
+const Q = new URLSearchParams(location.search);
+const KINDS = Q.get("kinds") ? Q.get("kinds").split(",") : null;
+const ASC = Q.get("order") === "asc";
+if (Q.get("full")) document.body.classList.add("full");
+if (Q.get("wide")) document.body.classList.add("wide");
+// hide=id1,id2 removes panels from screenshots (e.g. hide=chart-ledger)
+if (Q.get("hide")) document.head.insertAdjacentHTML("beforeend",
+  `<style>${Q.get("hide").split(",").map(id => `#${id}`).join(",")}{display:none !important}</style>`);
+// steps=a-b keeps events from model call #a through the events following call #b.
+const [STEP_LO, STEP_HI] = (Q.get("steps") || "0-99999").split("-").map(Number);
+
+async function j(url, opts) { const r = await fetch(url, opts); if (!r.ok) throw new Error(await r.text()); return r.json(); }
+
+async function loadMeta() {
+  const m = await j("/api/meta");
+  $("#meta").textContent = `ScaleDown ${m.scaledown_enabled ? "on" : "OFF"} · per-run model/ctx shown on each run`;
+  $("#scenario").innerHTML = m.scenarios.map(s => `<option value="${s.id}">${esc(s.title)} [${s.kind}]</option>`).join("");
+  $("#profile").innerHTML = Object.keys(m.profiles).map(p => `<option ${p==="scaledown_fold"?"selected":""}>${p}</option>`).join("");
+}
+
+async function loadRuns() {
+  const runs = await j("/api/runs?limit=60");
+  $("#runs").innerHTML = runs.map(r => `
+    <li data-id="${r.id}" class="${r.id===selected?"sel":""}">
+      <div class="t">${esc(r.scenario)} <span class="chip">${esc(r.profile)}</span></div>
+      <div class="s"><span class="st-${r.status}">${r.status}</span>
+        ${r.correct===null?"":(r.correct==="true"?"· ✓ correct":"· ✗ wrong")}
+        · ${fmt(r.steps)} steps ${r.wall_s?`· ${Math.round(r.wall_s)}s`:""}${r.attempts>1?` · resumed ×${r.attempts-1}`:""}</div>
+    </li>`).join("");
+  document.querySelectorAll("#runs li").forEach(li => li.onclick = () => select(li.dataset.id));
+}
+
+function sparkline(series) {
+  if (!series.length) return "";
+  const w = 560, h = 120, p = 24, max = Math.max(...series.map(s => s.in_tokens));
+  const x = (i) => p + (i * (w - 2*p)) / Math.max(1, series.length - 1);
+  const y = (v) => h - p - (v / max) * (h - 2*p);
+  const pts = series.map((s, i) => `${x(i)},${y(s.in_tokens)}`).join(" ");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Context tokens per model call">
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    ${series.map((s,i)=>`<circle cx="${x(i)}" cy="${y(s.in_tokens)}" r="2.5" fill="var(--accent)"><title>step ${s.step}: ${fmt(s.in_tokens)} tok, ${fmt(s.latency_ms)} ms</title></circle>`).join("")}
+    <text x="${p}" y="12">${fmt(max)} tok</text><text x="${w-p-60}" y="${h-6}">model call →</text></svg>`;
+}
+
+function renderEvent(e) {
+  const p = e.payload || {};
+  let body = "";
+  switch (e.kind) {
+    case "model_call": body = `#${p.step} ctx=${fmt(p.context_tokens)} tok ${fmt(p.latency_ms)}ms\n` +
+      (p.tool_calls||[]).map(c => `→ ${c.name}(${c.args})`).join("\n") + (p.text?`\n“${p.text}”`:""); break;
+    case "tool_result": body = `${p.tool}: ${fmt(p.chars)} chars / ${fmt(p.tokens)} tok\n${p.preview}`; break;
+    case "guard_check": body = (p.verdicts||[]).map(v => `${v.detector}: ${v.label} ${Object.entries(v.probs).map(([k,x])=>`${k[0]}=${x.toFixed(2)}`).join(" ")} (${Math.round(v.latency_ms)}ms)`).join("\n") + (p.gated?"\n(paid detector gated off)":""); break;
+    case "resumed": body = `worker ${p.worker} reclaimed the run (attempt ${p.attempt}) and resumed after step ${p.from_step}; pending node: ${(p.pending||[]).join(",")}`; break;
+    case "started": body = `worker ${p.worker} · profile ${p.profile} · scenario ${p.scenario}`; break;
+    case "guard_nudge": body = `NUDGE: ${p.label} (p=${Number(p.p).toFixed(2)})\n${p.reason||""}`; break;
+    case "guard_stop": body = `STOP: ${p.label} (p=${Number(p.p).toFixed(2)})\n${p.reason||""}`; break;
+    case "finished": body = `${p.status} · ${p.correct ? "✓ correct" : "✗ " + (p.reason||"")} · ${p.steps} model calls`; break;
+    default: body = JSON.stringify(p, null, 1);
+  }
+  const d = document.createElement("div");
+  d.className = `ev ${e.kind}`;
+  d.innerHTML = `<div class="k">${e.kind}</div><div class="b">${esc(body)}</div>`;
+  return d;
+}
+
+async function select(id) {
+  selected = id; loadRuns();
+  if (source) source.close();
+  const r = await j(`/api/runs/${id}`);
+  const g = r.grade || {}, rep = r.report || {};
+  $("#detail").innerHTML = `
+    <div class="panel" id="summary-panel">
+      <h2>${esc(r.scenario)} · ${esc(r.profile)} · <span class="st-${r.status}">${r.status}</span></h2>
+      <div class="kv">
+        <div>Runtime</div><div>${r.config.runtime ? `${esc(r.config.runtime.agent_model)} · ctx ${fmt(r.config.runtime.num_ctx)} · ${esc(r.config.runtime.worker)}` : "–"}</div>
+        <div>Attempts</div><div>${r.attempts}${r.attempts>1?` (resumed ${r.attempts-1}× after a worker loss)`:""}</div>
+        <div>Grade</div><div>${g.correct===undefined?"–":(g.correct?"✓ root cause correct":"✗ "+esc(g.reason))}</div>
+        <div>Root cause</div><div>${esc(rep.root_cause||"–")}</div>
+        <div>Remediation</div><div>${esc(rep.remediation||"–")}</div>
+        <div>Expected</div><div>${esc(g.expected||"–")}</div>
+        <div>Prodsim calls</div><div>${g.access?`${g.access.prodsim_calls} (failed ${g.access.failed_calls}, max identical ${g.access.max_identical_calls})`:"–"}</div>
+        <div>Extraction</div><div><code>${esc(JSON.stringify(r.extraction||{}))}</code></div>
+        ${r.error?`<div>Error</div><div class="st-failed">${esc(r.error)}</div>`:""}
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div id="chart-ledger">
+        <div class="panel"><h2>Context sent to agent model, per call</h2>${sparkline(r.context_series)}</div>
+        <div class="panel" style="margin-top:16px"><h2>Ledger</h2>
+          <table><tr><th>component</th><th>calls</th><th>in tok</th><th>out tok</th><th>ms</th><th>fail</th></tr>
+          ${r.ledger.map(l=>`<tr><td>${l.component}</td><td>${fmt(l.calls)}</td><td>${fmt(l.in_tokens)}</td><td>${fmt(l.out_tokens)}</td><td>${fmt(l.latency_ms)}</td><td>${fmt(l.failures)}</td></tr>`).join("")}
+          </table></div>
+      </div>
+      <div class="panel" id="timeline-panel"><h2>${Q.get("title") ? Q.get("title") : Q.get("steps") ? `Timeline · model calls ${Q.get("steps")}` : "Timeline (live)"}</h2><div class="timeline" id="tl"></div></div>
+    </div>`;
+  source = new EventSource(`/api/runs/${id}/stream`);
+  const tl = $("#tl");
+  let curStep = 0;  // events arrive in id order on replay, so this tracks the current model call
+  const on = (ev) => { if (ev.type === "ping") return; const e = JSON.parse(ev.data);
+    if (e.kind === "model_call") curStep = e.payload.step;
+    const inWindow = curStep >= STEP_LO && curStep <= STEP_HI || ["resumed","finished","failed"].includes(e.kind) && curStep >= STEP_LO - 1 && curStep <= STEP_HI;
+    if ((!KINDS || KINDS.includes(e.kind)) && inWindow) (ASC ? tl.append(renderEvent(e)) : tl.prepend(renderEvent(e)));
+    if (["finished","failed"].includes(e.kind)) setTimeout(() => select(id), 800); };
+  ["started","resumed","model_call","tool_result","guard_check","guard_nudge","guard_stop","extraction",
+   "summarized","report_submitted","finished","failed"].forEach(k => source.addEventListener(k, on));
+}
+
+$("#go").onclick = async () => {
+  const r = await j("/api/runs", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({scenario: $("#scenario").value, profile: $("#profile").value})});
+  await loadRuns(); select(r.id);
+};
+const PALETTE = ["var(--muted)", "var(--accent)", "var(--warn)", "var(--ok)"];
+async function compare(ids) {
+  const runs = await Promise.all(ids.map(id => j(`/api/runs/${id}`)));
+  const w = 760, h = 260, p = 44;
+  const maxY = Math.max(...runs.flatMap(r => r.context_series.map(s => s.in_tokens)));
+  const maxX = Math.max(...runs.map(r => r.context_series.length));
+  const x = (i) => p + (i * (w - 2*p)) / Math.max(1, maxX - 1);
+  const y = (v) => h - p - (v / maxY) * (h - 2*p);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(maxY * f));
+  const total = (r) => r.context_series.reduce((a, s) => a + s.in_tokens, 0);
+  const lines = runs.map((r, k) => `<polyline points="${r.context_series.map((s,i)=>`${x(i)},${y(s.in_tokens)}`).join(" ")}" fill="none" stroke="${PALETTE[k]}" stroke-width="2.5"/>`).join("");
+  const comps = [...new Set(runs.flatMap(r => r.ledger.map(l => l.component)))].sort();
+  $("#detail").innerHTML = `
+    <div class="panel" id="compare-panel">
+      <h2>${esc(runs[0].scenario)} · context sent to the agent model, per call</h2>
+      <div class="legend">${runs.map((r,k)=>`<span><i style="background:${PALETTE[k]}"></i><b>${esc(r.profile)}</b> · ${r.context_series.length} calls · ${fmt(total(r))} tok total · peak ${fmt(Math.max(...r.context_series.map(s=>s.in_tokens)))} · ${r.status}${r.grade?(r.grade.correct?" ✓":" ✗"):""}</span>`).join("")}</div>
+      <svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Context tokens per model call, by profile">
+        ${ticks.map(t=>`<line x1="${p}" x2="${w-p}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="4" y="${y(t)+3}">${fmt(t)}</text>`).join("")}
+        ${lines}<text x="${w-p-80}" y="${h-10}">model call →</text></svg>
+      <table style="margin-top:12px"><tr><th>component</th>${runs.map(r=>`<th colspan="2">${esc(r.profile)}: calls / in tok</th>`).join("")}</tr>
+        ${comps.map(c=>`<tr><td>${c}</td>${runs.map(r=>{const l=r.ledger.find(x=>x.component===c);return `<td>${l?fmt(l.calls):"–"}</td><td>${l?fmt(l.in_tokens):"–"}</td>`;}).join("")}</tr>`).join("")}
+      </table>
+    </div>`;
+}
+
+loadMeta(); loadRuns(); setInterval(loadRuns, 5000);
+if (Q.get("compare")) compare(Q.get("compare").split(","));
+else if (Q.get("run")) select(Q.get("run"));
+</script>
+</body>
+</html>
