@@ -1,0 +1,8 @@
+.env
+results/raw/
+__pycache__/
+*.pyc
+.venv/
+results/screenshots/
+results/data/
+.ruff_cache/

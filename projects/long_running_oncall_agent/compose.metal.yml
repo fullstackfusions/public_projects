@@ -1,0 +1,14 @@
+# Dev-only override: use the native Ollama app on the Mac (Metal GPU) instead of the
+# CPU container. Never used for published numbers.
+#
+#   make up-metal        (= docker compose -f docker-compose.yml -f compose.metal.yml up ...)
+#
+# Requires the Ollama app running on the host with the agent model pulled.
+services:
+  worker:
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+    depends_on: !override
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      prodsim: {condition: service_healthy}

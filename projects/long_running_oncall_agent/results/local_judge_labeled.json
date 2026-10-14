@@ -1,0 +1,149 @@
+[
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2319.0859599999953,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2114.0018350000105,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 2714.005377000007,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 3236.852417999998,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "drifting",
+  "p": 0.85,
+  "ms": 3816.0399180000013,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2161.3317919999986,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2966.8986260000024,
+  "ok": true
+ },
+ {
+  "gold": "progressing",
+  "pred": "drifting",
+  "p": 0.85,
+  "ms": 2180.472501000011,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 2527.844043000016,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 2893.7720430000127,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "p": 0.95,
+  "ms": 3613.727460000007,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 1922.7677929999913,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 1690.7939590000183,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 2155.124709000006,
+  "ok": true
+ },
+ {
+  "gold": "looping",
+  "pred": "looping",
+  "p": 0.95,
+  "ms": 2722.496583999998,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2311.1215429999847,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "p": 0.85,
+  "ms": 2260.8590829999857,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "progressing",
+  "p": 0.025000000000000022,
+  "ms": 2469.597375999996,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "p": 0.95,
+  "ms": 2523.1361680000077,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "p": 0.85,
+  "ms": 2438.265626000003,
+  "ok": true
+ },
+ {
+  "gold": "drifting",
+  "pred": "drifting",
+  "p": 0.85,
+  "ms": 2270.7866260000173,
+  "ok": true
+ }
+]
